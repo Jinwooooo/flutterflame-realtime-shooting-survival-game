@@ -1,13 +1,17 @@
+// flame imports
 import 'package:flame/game.dart';
+
+// flutter imports
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+// realtime sync imports
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../components/joypad.dart';
 import '../main.dart';
 import 'game.dart';
-
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key});
@@ -90,32 +94,33 @@ class _GamePageState extends State<GamePage> {
         context: context,
         barrierDismissible: false,
         builder: (context) => _LobbyDialog(
-          onGameStarted: (gameId) async {
-            await Future.delayed(Duration.zero);
-            setState(() {});
-            _game.startNewGame();
-            _gameChannel = supabase.channel(gameId,
-                opts: const RealtimeChannelConfig(ack: true));
-            _gameChannel!
-                .onBroadcast(
-              event: 'game_state',
-              callback: (payload, [_]) {
-                final position = Vector2(
-                    payload['x'] as double, payload['y'] as double);
-                final opponentHealth = payload['health'] as int;
-                _game.updateOpponent(
-                    position: position, health: opponentHealth);
-                if (opponentHealth <= 0 && !_game.isGameOver) {
-                  _game.isGameOver = true;
-                  _game.onGameOver(true);
-                }
+              onGameStarted: (gameId) async {
+                await Future.delayed(Duration.zero);
+                setState(() {});
+                _game.startNewGame();
+                _gameChannel = supabase.channel(gameId,
+                    opts: const RealtimeChannelConfig(ack: true));
+                _gameChannel!
+                    .onBroadcast(
+                      event: 'game_state',
+                      callback: (payload, [_]) {
+                        final position = Vector2(
+                            payload['x'] as double, payload['y'] as double);
+                        final opponentHealth = payload['health'] as int;
+                        _game.updateOpponent(
+                            position: position, health: opponentHealth);
+                        if (opponentHealth <= 0 && !_game.isGameOver) {
+                          _game.isGameOver = true;
+                          _game.onGameOver(true);
+                        }
+                      },
+                    )
+                    .subscribe();
               },
-            )
-                .subscribe();
-          },
-        ));
+            ));
   }
 }
+
 class _LobbyDialog extends StatefulWidget {
   const _LobbyDialog({
     required this.onGameStarted,
@@ -143,29 +148,29 @@ class _LobbyDialogState extends State<_LobbyDialog> {
 
     _lobbyChannel
         .onPresenceSync((payload, [ref]) {
-      final presenceStates = _lobbyChannel.presenceState();
-      setState(() {
-        _userids = presenceStates
-            .map((presenceState) =>
-        presenceState.presences.first.payload['user_id'] as String)
-            .toList();
-      });
-    })
-        .onBroadcast(
-        event: 'game_start',
-        callback: (payload, [_]) {
-          final participantIds = List<String>.from(payload['participants']);
-          if (participantIds.contains(myUserId)) {
-            final gameId = payload['game_id'] as String;
-            widget.onGameStarted(gameId);
-            Navigator.of(context).pop();
-          }
+          final presenceStates = _lobbyChannel.presenceState();
+          setState(() {
+            _userids = presenceStates
+                .map((presenceState) =>
+                    presenceState.presences.first.payload['user_id'] as String)
+                .toList();
+          });
         })
+        .onBroadcast(
+            event: 'game_start',
+            callback: (payload, [_]) {
+              final participantIds = List<String>.from(payload['participants']);
+              if (participantIds.contains(myUserId)) {
+                final gameId = payload['game_id'] as String;
+                widget.onGameStarted(gameId);
+                Navigator.of(context).pop();
+              }
+            })
         .subscribe((status, _) async {
-      if (status == RealtimeSubscribeStatus.subscribed) {
-        await _lobbyChannel.track({'user_id': myUserId});
-      }
-    });
+          if (status == RealtimeSubscribeStatus.subscribed) {
+            await _lobbyChannel.track({'user_id': myUserId});
+          }
+        });
   }
 
   @override
@@ -180,30 +185,30 @@ class _LobbyDialogState extends State<_LobbyDialog> {
       title: const Text('Lobby'),
       content: _loading
           ? const SizedBox(
-        height: 100,
-        child: Center(child: CircularProgressIndicator()),
-      )
+              height: 100,
+              child: Center(child: CircularProgressIndicator()),
+            )
           : Text('${_userids.length} users waiting'),
       actions: [
         TextButton(
           onPressed: _userids.length < 2
               ? null
               : () async {
-            setState(() {
-              _loading = true;
-            });
+                  setState(() {
+                    _loading = true;
+                  });
 
-            final opponentId =
-            _userids.firstWhere((userId) => userId != myUserId);
-            final gameId = const Uuid().v4();
-            await _lobbyChannel.sendBroadcastMessage(
-              event: 'game_start',
-              payload: {
-                'participants': [opponentId, myUserId],
-                'game_id': gameId,
-              },
-            );
-          },
+                  final opponentId =
+                      _userids.firstWhere((userId) => userId != myUserId);
+                  final gameId = const Uuid().v4();
+                  await _lobbyChannel.sendBroadcastMessage(
+                    event: 'game_start',
+                    payload: {
+                      'participants': [opponentId, myUserId],
+                      'game_id': gameId,
+                    },
+                  );
+                },
           child: const Text('Start Game'),
         ),
       ],
