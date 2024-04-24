@@ -21,8 +21,10 @@ class JoypadState extends State<Joypad> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
+
       height: 120,
       width: 120,
+
       child: Container(
         decoration: BoxDecoration(
           color: Colors.grey[800],
