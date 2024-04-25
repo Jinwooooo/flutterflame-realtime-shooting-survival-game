@@ -1,5 +1,8 @@
+// dart imports
 import 'dart:async';
 import 'dart:math';
+
+// flutter imports
 import 'package:flutter/material.dart';
 
 enum Direction { up, down, left, right, none }

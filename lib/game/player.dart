@@ -35,7 +35,6 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     position = newPosition;
   }
 
-
   void updateHealth(double healthLeft) {
     for (final child in children) {
       if (child is _Gauge) {
@@ -96,5 +95,4 @@ class _Gauge extends PositionComponent {
                   ? Colors.orange
                   : Colors.red);
   }
-
 }

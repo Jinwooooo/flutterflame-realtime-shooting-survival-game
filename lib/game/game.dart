@@ -1,11 +1,13 @@
 // dart imports
 import 'dart:async';
+// import 'dart:math';
 
 // flutter imports
 import 'package:flutter/material.dart';
 
 // flame imports
 import 'package:flame/game.dart';
+import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/image_composition.dart' as flame_image;
 
@@ -15,7 +17,7 @@ import 'package:flame_realtime_shooting/game/player.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
 
 class MyGame extends FlameGame with HasCollisionDetection {
-  static final Vector2 worldSize = Vector2(2000, 2000);
+  static final Vector2 worldSize = Vector2(4000, 4000);
   late Player _player, _opponent;
   late CameraComponent _camera;
   static const _initialHealthPoints = 100;
@@ -43,8 +45,32 @@ class MyGame extends FlameGame with HasCollisionDetection {
     await super.onLoad();
 
     await setupPlayers();
-    await setupBackground();
-    setupCamera();
+
+    final backgroundImage = await images.load('background.jpg');
+    final background = SpriteComponent(sprite: Sprite(backgroundImage), size: worldSize, priority: -1)..debugMode = true;
+    add(background);
+    // _camera = CameraComponent();
+    // _camera.viewfinder.zoom = 2.0;
+    // _camera.viewfinder.position = Vector2.zero();
+    // world.add(_camera);
+    // camera = _camera;
+    // setupCamera();
+    // camera.viewfinder.zoom = 1.5;
+    // camera = CameraComponent.withFixedResolution(
+    //   width: 4000,
+    //   height: 4000,
+    // );
+    // camera.viewfinder.position = Vector2(2000,2000);
+
+    final world = World(children:[background]);
+    await add(world);
+
+    final _cam = CameraComponent.withFixedResolution(width: 800, height: 640, world: world);
+    await add(_cam);
+    _cam.follow(_player);
+
+    _player.debugMode = true;
+    _cam.debugMode = true;
 
     _playerBulletImage = await images.load('player-bullet.png');
     _opponentBulletImage = await images.load('opponent-bullet.png');
@@ -65,15 +91,15 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
   Future<void> setupBackground() async {
     final backgroundImage = await images.load('background.jpg');
-    final background = SpriteComponent(sprite: Sprite(backgroundImage), size: Vector2(1000, 1000));
-    background.priority = -1;
+    final background = SpriteComponent(sprite: Sprite(backgroundImage), size: worldSize, priority: -1);
     add(background);
   }
 
-  void setupCamera() {
-    _camera = CameraComponent()..follow(_player);
-    add(_camera);
-  }
+  // @override
+  // void onGameResize(Vector2 gameSize) {
+  //   super.onGameResize(gameSize);
+  //   camera.viewport = FixedResolutionViewport(resolution: gameSize);
+  // }
 
   @override
   void update(double dt) {
@@ -81,6 +107,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
     if (isGameOver) {
       return;
     }
+    // print("Camera zoom: ${camera.viewfinder.zoom}");
     for (final child in children) {
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
         _playerHealthPoint = _playerHealthPoint - child.damage;
@@ -176,10 +203,14 @@ class MyGame extends FlameGame with HasCollisionDetection {
         movementVector = Vector2.zero();
         break;
     }
-    _player.move(movementVector);
 
-    // update position
+    Vector2 newPosition = _player.position + movementVector;
+    newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Assuming the player is a square for simplicity
+    _player.position = newPosition;
+
+    // update position and potentially other game state variables
     final mirroredPosition = _player.getMirroredPercentPosition();
     onGameStateUpdate(mirroredPosition, _playerHealthPoint);
   }
+
 }

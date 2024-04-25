@@ -30,7 +30,6 @@ class _GamePageState extends State<GamePage> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/background.jpg', fit: BoxFit.cover),
           GameWidget(game: _game),
           Positioned(
             left: 20,
