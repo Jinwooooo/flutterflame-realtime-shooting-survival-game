@@ -96,8 +96,8 @@ class _Gauge extends PositionComponent {
           ..color = _healthLeft > 0.5
               ? Colors.green
               : _healthLeft > 0.25
-                  ? Colors.orange
-                  : Colors.red);
+              ? Colors.orange
+              : Colors.red);
   }
 
 }
