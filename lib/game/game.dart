@@ -20,6 +20,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
   static final Vector2 worldSize = Vector2(4000, 4000);
   late Player _player, _opponent;
   late CameraComponent _camera;
+  late SpriteComponent _map;
   static const _initialHealthPoints = 100;
   int _playerHealthPoint = _initialHealthPoints;
   bool isGameOver = true;
@@ -44,43 +45,29 @@ class MyGame extends FlameGame with HasCollisionDetection {
   Future<void> onLoad() async {
     await super.onLoad();
 
-    await setupPlayers();
-
-    final backgroundImage = await images.load('background.jpg');
-    final background = SpriteComponent(sprite: Sprite(backgroundImage), size: worldSize, priority: -1)..debugMode = true;
-    add(background);
-    // _camera = CameraComponent();
-    // _camera.viewfinder.zoom = 2.0;
-    // _camera.viewfinder.position = Vector2.zero();
-    // world.add(_camera);
-    // camera = _camera;
-    // setupCamera();
-    // camera.viewfinder.zoom = 1.5;
-    // camera = CameraComponent.withFixedResolution(
-    //   width: 4000,
-    //   height: 4000,
-    // );
-    // camera.viewfinder.position = Vector2(2000,2000);
-
-    final world = World(children:[background]);
-    await add(world);
-
-    final _cam = CameraComponent.withFixedResolution(width: 800, height: 640, world: world);
-    await add(_cam);
-    _cam.follow(_player);
-
-    _player.debugMode = true;
-    _cam.debugMode = true;
-
-    _playerBulletImage = await images.load('player-bullet.png');
-    _opponentBulletImage = await images.load('opponent-bullet.png');
-  }
-
-  Future<void> setupPlayers() async {
+    _map = SpriteComponent.fromImage(await images.load('background.jpg'), size: worldSize, priority: -1)
+      ..debugMode = true;
+    add(_map);
     _player = await createPlayer('player.png', true);
     _opponent = await createPlayer('opponent.png', false);
     add(_player);
     add(_opponent);
+
+    _playerBulletImage = await images.load('player-bullet.png');
+    _opponentBulletImage = await images.load('opponent-bullet.png');
+
+    final world = World(children:[_map, _player, _opponent]);
+    await add(world);
+
+    _camera = CameraComponent.withFixedResolution(width: 640, height: 800, world: world);
+    await add(_camera);
+    _camera.follow(_player);
+    // _camera.viewfinder.zoom = 3.0;
+
+    _player.debugMode = true;
+    _camera.debugMode = true;
+
+    
   }
 
   Future<Player> createPlayer(String imagePath, bool isMe) async {
@@ -107,7 +94,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
     if (isGameOver) {
       return;
     }
-    // print("Camera zoom: ${camera.viewfinder.zoom}");
+    // print("Camera position: ${_camera.viewfinder.position}");
     for (final child in children) {
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
         _playerHealthPoint = _playerHealthPoint - child.damage;
