@@ -9,6 +9,7 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
   late final Vector2 initialPosition;
   Timer? moveTimer;
+
   Player({required bool isMe}) : _isMyPlayer = isMe;
   final bool _isMyPlayer;
   static const radius = 20.0;
@@ -25,14 +26,16 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
         : Vector2(initialX, gameRef.size.y * 0.2);
     position = initialPosition;
 
+
+
     add(CircleHitbox());
     add(_Gauge());
     await super.onLoad();
   }
+
   void move(Vector2 delta) {
-    Vector2 newPosition = position + delta;
-    newPosition.clamp(Vector2(radius, radius), gameRef.size - Vector2(radius, radius));
-    position = newPosition;
+    position += delta;
+    position.clamp(Vector2.zero(), gameRef.size - Vector2.all(radius * 2));
   }
 
 

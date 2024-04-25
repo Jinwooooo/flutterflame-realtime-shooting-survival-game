@@ -2,6 +2,8 @@
 import 'dart:async';
 
 // flutter imports
+import 'package:flame/experimental.dart';
+import 'package:flame/src/experimental/geometry/shapes/shape.dart';
 import 'package:flutter/material.dart';
 
 // flame imports
@@ -14,6 +16,9 @@ import 'package:flame_realtime_shooting/game/bullet.dart';
 import 'package:flame_realtime_shooting/game/player.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
 
+
+import 'package:flame/geometry.dart';
+
 class MyGame extends FlameGame with HasCollisionDetection {
   static final Vector2 worldSize = Vector2(2000, 2000);
   late Player _player, _opponent;
@@ -21,6 +26,12 @@ class MyGame extends FlameGame with HasCollisionDetection {
   static const _initialHealthPoints = 100;
   int _playerHealthPoint = _initialHealthPoints;
   bool isGameOver = true;
+
+
+  @override
+  // TODO: implement camera
+  CameraComponent get camera => super.camera;
+
 
   final void Function(bool didWin) onGameOver;
   final void Function(Vector2 position, int health) onGameStateUpdate;
@@ -44,7 +55,6 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
     await setupPlayers();
     await setupBackground();
-    setupCamera();
 
     _playerBulletImage = await images.load('player-bullet.png');
     _opponentBulletImage = await images.load('opponent-bullet.png');
@@ -65,15 +75,11 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
   Future<void> setupBackground() async {
     final backgroundImage = await images.load('background.jpg');
-    final background = SpriteComponent(sprite: Sprite(backgroundImage), size: Vector2(1000, 1000));
+    final background = SpriteComponent(sprite: Sprite(backgroundImage), size: worldSize);
     background.priority = -1;
     add(background);
   }
 
-  void setupCamera() {
-    _camera = CameraComponent()..follow(_player);
-    add(_camera);
-  }
 
   @override
   void update(double dt) {
@@ -172,14 +178,15 @@ class MyGame extends FlameGame with HasCollisionDetection {
       case Direction.right:
         movementVector = Vector2(speed, 0);
         break;
-      case Direction.none:
+      default:
         movementVector = Vector2.zero();
         break;
     }
     _player.move(movementVector);
-
+    _player.position.clamp(Vector2.zero(), worldSize - Vector2.all(Player.radius * 2));
     // update position
     final mirroredPosition = _player.getMirroredPercentPosition();
     onGameStateUpdate(mirroredPosition, _playerHealthPoint);
   }
+
 }
