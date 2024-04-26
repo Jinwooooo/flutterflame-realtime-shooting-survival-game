@@ -9,7 +9,6 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
   late final Vector2 initialPosition;
   Timer? moveTimer;
-
   Player({required bool isMe}) : _isMyPlayer = isMe;
   final bool _isMyPlayer;
   static const radius = 20.0;
@@ -30,10 +29,10 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     add(_Gauge());
     await super.onLoad();
   }
-
   void move(Vector2 delta) {
-    position += delta;
-    position.clamp(Vector2.zero(), gameRef.size - Vector2.all(radius * 2));
+    Vector2 newPosition = position + delta;
+    newPosition.clamp(Vector2(radius, radius), gameRef.size - Vector2(radius, radius));
+    position = newPosition;
   }
 
   void updateHealth(double healthLeft) {
@@ -93,7 +92,7 @@ class _Gauge extends PositionComponent {
           ..color = _healthLeft > 0.5
               ? Colors.green
               : _healthLeft > 0.25
-                  ? Colors.orange
-                  : Colors.red);
+              ? Colors.orange
+              : Colors.red);
   }
 }

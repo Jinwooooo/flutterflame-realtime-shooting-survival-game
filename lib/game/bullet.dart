@@ -37,7 +37,7 @@ class Bullet extends PositionComponent with CollisionCallbacks, HasGameRef {
       ..anchor = Anchor.center);
 
     final sprite =
-        SpriteComponent.fromImage(image, size: Vector2.all(radius * 2));
+    SpriteComponent.fromImage(image, size: Vector2.all(radius * 2));
 
     add(sprite);
     await super.onLoad();

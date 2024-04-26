@@ -1,13 +1,13 @@
 // dart imports
 import 'dart:async';
+// import 'dart:math';
 
 // flutter imports
-import 'package:flame/experimental.dart';
-import 'package:flame/src/experimental/geometry/shapes/shape.dart';
 import 'package:flutter/material.dart';
 
 // flame imports
 import 'package:flame/game.dart';
+import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/image_composition.dart' as flame_image;
 
@@ -16,22 +16,14 @@ import 'package:flame_realtime_shooting/game/bullet.dart';
 import 'package:flame_realtime_shooting/game/player.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
 
-
-import 'package:flame/geometry.dart';
-
 class MyGame extends FlameGame with HasCollisionDetection {
-  static final Vector2 worldSize = Vector2(2000, 2000);
+  static final Vector2 worldSize = Vector2(4000, 4000);
   late Player _player, _opponent;
   late CameraComponent _camera;
+  late SpriteComponent _map;
   static const _initialHealthPoints = 100;
   int _playerHealthPoint = _initialHealthPoints;
   bool isGameOver = true;
-
-
-  @override
-  // TODO: implement camera
-  CameraComponent get camera => super.camera;
-
 
   final void Function(bool didWin) onGameOver;
   final void Function(Vector2 position, int health) onGameStateUpdate;
@@ -53,18 +45,29 @@ class MyGame extends FlameGame with HasCollisionDetection {
   Future<void> onLoad() async {
     await super.onLoad();
 
-    await setupPlayers();
-    await setupBackground();
-
-    _playerBulletImage = await images.load('player-bullet.png');
-    _opponentBulletImage = await images.load('opponent-bullet.png');
-  }
-
-  Future<void> setupPlayers() async {
+    _map = SpriteComponent.fromImage(await images.load('background.jpg'), size: worldSize, priority: -1)
+      ..debugMode = true;
+    add(_map);
     _player = await createPlayer('player.png', true);
     _opponent = await createPlayer('opponent.png', false);
     add(_player);
     add(_opponent);
+
+    _playerBulletImage = await images.load('player-bullet.png');
+    _opponentBulletImage = await images.load('opponent-bullet.png');
+
+    final world = World(children:[_map, _player, _opponent]);
+    await add(world);
+
+    _camera = CameraComponent.withFixedResolution(width: 640, height: 800, world: world);
+    await add(_camera);
+    _camera.follow(_player);
+    // _camera.viewfinder.zoom = 3.0;
+
+    _player.debugMode = true;
+    _camera.debugMode = true;
+
+
   }
 
   Future<Player> createPlayer(String imagePath, bool isMe) async {
@@ -75,11 +78,15 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
   Future<void> setupBackground() async {
     final backgroundImage = await images.load('background.jpg');
-    final background = SpriteComponent(sprite: Sprite(backgroundImage), size: worldSize);
-    background.priority = -1;
+    final background = SpriteComponent(sprite: Sprite(backgroundImage), size: worldSize, priority: -1);
     add(background);
   }
 
+  // @override
+  // void onGameResize(Vector2 gameSize) {
+  //   super.onGameResize(gameSize);
+  //   camera.viewport = FixedResolutionViewport(resolution: gameSize);
+  // }
 
   @override
   void update(double dt) {
@@ -87,6 +94,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
     if (isGameOver) {
       return;
     }
+    // print("Camera position: ${_camera.viewfinder.position}");
     for (final child in children) {
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
         _playerHealthPoint = _playerHealthPoint - child.damage;
@@ -178,13 +186,16 @@ class MyGame extends FlameGame with HasCollisionDetection {
       case Direction.right:
         movementVector = Vector2(speed, 0);
         break;
-      default:
+      case Direction.none:
         movementVector = Vector2.zero();
         break;
     }
-    _player.move(movementVector);
-    _player.position.clamp(Vector2.zero(), worldSize - Vector2.all(Player.radius * 2));
-    // update position
+
+    Vector2 newPosition = _player.position + movementVector;
+    newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Assuming the player is a square for simplicity
+    _player.position = newPosition;
+
+    // update position and potentially other game state variables
     final mirroredPosition = _player.getMirroredPercentPosition();
     onGameStateUpdate(mirroredPosition, _playerHealthPoint);
   }
