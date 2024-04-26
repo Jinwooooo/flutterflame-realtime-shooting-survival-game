@@ -26,8 +26,6 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
         : Vector2(initialX, gameRef.size.y * 0.2);
     position = initialPosition;
 
-
-
     add(CircleHitbox());
     add(_Gauge());
     await super.onLoad();
@@ -37,7 +35,6 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     position += delta;
     position.clamp(Vector2.zero(), gameRef.size - Vector2.all(radius * 2));
   }
-
 
   void updateHealth(double healthLeft) {
     for (final child in children) {
@@ -96,8 +93,7 @@ class _Gauge extends PositionComponent {
           ..color = _healthLeft > 0.5
               ? Colors.green
               : _healthLeft > 0.25
-              ? Colors.orange
-              : Colors.red);
+                  ? Colors.orange
+                  : Colors.red);
   }
-
 }
