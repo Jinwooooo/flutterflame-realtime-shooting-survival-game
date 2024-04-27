@@ -1,9 +1,17 @@
+// dart imports
 import 'dart:async';
+import 'dart:math';
 
+// flutter imports
+import 'package:flutter/material.dart';
+
+// flame imports
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+
+// self imports
 import 'package:flame_realtime_shooting/game/bullet.dart';
-import 'package:flutter/material.dart';
+
 
 class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
@@ -12,6 +20,9 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Player({required bool isMe}) : _isMyPlayer = isMe;
   final bool _isMyPlayer;
   static const radius = 20.0;
+  // bool canBePushed = true; // player collisions
+  // bool isMoving = false; // player collisions
+  // double pushResistance = 1.0; // player collisions
 
   @override
   Future<void>? onLoad() async {
@@ -29,9 +40,9 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     add(_Gauge());
     await super.onLoad();
   }
+
   void move(Vector2 delta) {
-    Vector2 newPosition = position + delta;
-    newPosition.clamp(Vector2(radius, radius), gameRef.size - Vector2(radius, radius));
+    final newPosition = position + delta;
     position = newPosition;
   }
 
@@ -43,14 +54,26 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     }
   }
 
+  // In the Player class
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    super.onCollision(intersectionPoints, other);
-    if (other is Bullet && _isMyPlayer != other.isMine) {
-      other.hasBeenHit = true;
-      other.removeFromParent();
-    }
+      super.onCollision(intersectionPoints, other);
+      if (other is Player && _isMyPlayer) {
+          // Determine the direction of the push based on the position of the colliders
+          Vector2 pushDirection = other.position - position;
+          pushDirection.normalize(); // Normalize to get the direction vector
+          other.position += pushDirection * 5; // Move the opponent
+      }
   }
+
+  // @override
+  // void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+  //   super.onCollision(intersectionPoints, other);
+  //   if (other is Bullet && _isMyPlayer != other.isMine) {
+  //     other.hasBeenHit = true;
+  //     other.removeFromParent();
+  //   }
+  // }
 
   Vector2 getMirroredPercentPosition() {
     final mirroredPosition = gameRef.size - position;

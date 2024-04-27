@@ -1,17 +1,19 @@
-// flame imports
-import 'package:flame/game.dart';
-
 // flutter imports
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+// flame imports
+import 'package:flame/game.dart';
 
 // realtime sync imports
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-import '../components/joypad.dart';
-import '../main.dart';
-import 'game.dart';
+// self imports
+import 'package:flame_realtime_shooting/main.dart';
+import 'package:flame_realtime_shooting/components/joypad.dart';
+import 'package:flame_realtime_shooting/game/game.dart';
+
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key});

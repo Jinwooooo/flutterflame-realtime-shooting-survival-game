@@ -5,7 +5,7 @@ import 'dart:math';
 // flutter imports
 import 'package:flutter/material.dart';
 
-enum Direction { up, down, left, right, none }
+enum Direction { up, down, left, right, upLeft, upRight, downLeft, downRight, none }
 
 class Joypad extends StatefulWidget {
   final ValueChanged<Direction>? onDirectionChanged;
@@ -23,26 +23,28 @@ class JoypadState extends State<Joypad> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-
-      height: 120,
-      width: 120,
-
+    return Opacity(
+      opacity: 0.6,
       child: Container(
+        height: 120,
+        width: 120,
         decoration: BoxDecoration(
+          shape: BoxShape.circle,  // This enforces a circular shape for the outer circle
           color: Colors.grey[800],
-          borderRadius: BorderRadius.circular(30),
           border: Border.all(color: Colors.white, width: 2),
         ),
         child: GestureDetector(
           onPanStart: _handlePanStart,
           onPanUpdate: _handlePanUpdate,
           onPanEnd: _handlePanEnd,
-          child: Transform.translate(
-            offset: delta,
-            child: CircleAvatar(
-              backgroundColor: Colors.blue[300],
-              radius: 30,
+          child: Center(  // Ensure the controlling stick is centered
+            child: Transform.translate(
+              offset: delta,
+              child: CircleAvatar(
+                backgroundColor: Colors.grey[300],
+                // The radius is set to half the size of the outer circle
+                radius: 30,
+              ),
             ),
           ),
         ),
@@ -82,23 +84,35 @@ class JoypadState extends State<Joypad> {
     setState(() {
       delta = newDelta;
     });
-    final newDirection = getDirectionFromOffset(newDelta);
+    direction = getDirectionFromOffset(newDelta); // Update the direction here
     if (widget.onDirectionChanged != null) {
-      widget.onDirectionChanged!(newDirection);
+      widget.onDirectionChanged!(direction);
     }
   }
 
   Direction getDirectionFromOffset(Offset offset) {
-    if (offset.dx.abs() > offset.dy.abs()) {
-      return offset.dx > 0 ? Direction.right : Direction.left;
-    } else if (offset.dy != 0) {
-      return offset.dy > 0 ? Direction.down : Direction.up;
+    final double dx = offset.dx;
+    final double dy = offset.dy;
+    if (dx.abs() > 20 && dy.abs() > 20) { // Adjust the threshold as needed
+      if (dx > 0 && dy < 0) {
+        return Direction.upRight;
+      } else if (dx < 0 && dy < 0) {
+        return Direction.upLeft;
+      } else if (dx < 0 && dy > 0) {
+        return Direction.downLeft;
+      } else if (dx > 0 && dy > 0) {
+        return Direction.downRight;
+      }
+    } else if (dx.abs() > dy.abs()) {
+      return dx > 0 ? Direction.right : Direction.left;
+    } else if (dy.abs() > dx.abs()) {
+      return dy > 0 ? Direction.down : Direction.up;
     }
     return Direction.none;
   }
 
   void _startMovementTimer() {
-    movementTimer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+    movementTimer = Timer.periodic(const Duration(milliseconds: 10), (_) {
       if (isPressed && widget.onDirectionChanged != null) {
         widget.onDirectionChanged!(direction);
       }

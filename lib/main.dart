@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 // realtime sync imports
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// self imports
 import 'game/game_page.dart';
 
 void main() async {
