@@ -27,15 +27,11 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     width = radius * 2;
     height = radius * 2;
 
-    // Ensure gameRef and its size are available before using them
-    if (gameRef.size != null) {
-      final Random random = Random();
-      initialPosition = Vector2(
-        random.nextDouble() * gameRef.size.x,
-        random.nextDouble() * gameRef.size.y,
-      );
-      position = initialPosition;
-    }
+    final initialX = gameRef.size.x / 2;
+    initialPosition = _isMyPlayer
+        ? Vector2(initialX, gameRef.size.y * 0.8)
+        : Vector2(initialX, gameRef.size.y * 0.2);
+    position = initialPosition;
 
     add(CircleHitbox());
     add(_Gauge());
@@ -80,6 +76,11 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   //   }
   // }
 
+  Vector2 getMirroredPercentPosition() {
+    final mirroredPosition = gameRef.size - position;
+    return Vector2(mirroredPosition.x / gameRef.size.x,
+        mirroredPosition.y / gameRef.size.y);
+  }
 }
 
 class _Gauge extends PositionComponent {

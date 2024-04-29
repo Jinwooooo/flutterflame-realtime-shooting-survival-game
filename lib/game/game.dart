@@ -99,8 +99,9 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
     for (final child in children) {
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
-        _playerHealthPoint -= child.damage;
-        onGameStateUpdate(_player.position, _playerHealthPoint);  // 사용 위치 변경
+        _playerHealthPoint = _playerHealthPoint - child.damage;
+        final mirroredPosition = _player.getMirroredPercentPosition();
+        onGameStateUpdate(mirroredPosition, _playerHealthPoint);
         _player.updateHealth(_playerHealthPoint / _initialHealthPoints);
       }
     }
@@ -160,7 +161,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
   }
 
   void updateOpponent({required Vector2 position, required int health}) {
-    _opponent.position = position; // Direct assignment of new position
+    _opponent.position = Vector2(size.x * position.x, size.y * position.y);
     _opponent.updateHealth(health / _initialHealthPoints);
   }
 
@@ -206,11 +207,12 @@ class MyGame extends FlameGame with HasCollisionDetection {
     }
 
     Vector2 newPosition = _player.position + movementVector;
-    newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Ensure within bounds
+    newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Assuming the player is a square for simplicity
     _player.position = newPosition;
 
     // update position and potentially other game state variables
-    onGameStateUpdate(_player.position, _playerHealthPoint);
+    final mirroredPosition = _player.getMirroredPercentPosition();
+    onGameStateUpdate(mirroredPosition, _playerHealthPoint);
   }
 
   void handleMovementBasedOnJoystickDirection(double dt) {
@@ -242,8 +244,8 @@ class MyGame extends FlameGame with HasCollisionDetection {
       case Direction.downRight:
         movementVector = Vector2(speed, speed);
         break;
-      default:
-        movementVector = Vector2.zero(); // Just a fallback, ideally never reached
+      case Direction.none:
+        return;
     }
 
     // Vector2 newPosition = _player.position + movementVector;
@@ -251,15 +253,14 @@ class MyGame extends FlameGame with HasCollisionDetection {
     // _player.position = newPosition;
 
     Vector2 proposedNewPosition = _player.position + movementVector;
-    proposedNewPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Ensure within bounds
-    _player.position = proposedNewPosition;
+    proposedNewPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));
 
     // if (!isCollide(proposedNewPosition, _opponent)) {
     //     _player.position = proposedNewPosition;
     // }
 
-    // Directly update using the actual position
-    onGameStateUpdate(_player.position, _playerHealthPoint);
+    final mirroredPosition = _player.getMirroredPercentPosition();
+    onGameStateUpdate(mirroredPosition, _playerHealthPoint);
   }
 
   // Simple collision detection method
