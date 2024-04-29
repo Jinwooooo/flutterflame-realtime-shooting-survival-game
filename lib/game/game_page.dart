@@ -11,8 +11,9 @@ import 'package:uuid/uuid.dart';
 
 // self imports
 import 'package:flame_realtime_shooting/main.dart';
-import 'package:flame_realtime_shooting/components/joypad.dart';
 import 'package:flame_realtime_shooting/game/game.dart';
+import 'package:flame_realtime_shooting/components/joypad.dart';
+import 'package:flame_realtime_shooting/components/fire_button.dart';
 
 
 class GamePage extends StatefulWidget {
@@ -40,9 +41,22 @@ class _GamePageState extends State<GamePage> {
               _game.handleJoypadDirection(direction);
             }),
           ),
+          Positioned(
+            right: 20,
+            bottom: 20,
+            child: FireButton(
+              onFirePressed: _fire,
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  void _fire() {
+    if (_game != null) {
+      _game.fireBullets(5);
+    }
   }
 
   @override
@@ -54,15 +68,24 @@ class _GamePageState extends State<GamePage> {
   Future<void> _initialize() async {
     _game = MyGame(
       onGameStateUpdate: (position, health) async {
-        ChannelResponse response;
-        do {
-          response = await _gameChannel!.sendBroadcastMessage(
-            event: 'game_state',
-            payload: {'x': position.x, 'y': position.y, 'health': health},
-          );
-          await Future.delayed(Duration.zero);
-          setState(() {});
-        } while (response == ChannelResponse.rateLimited && health <= 0);
+        // Ensure position is not null and channel is initialized
+        if (_gameChannel != null && position != null) {
+          double x = position.x ?? 0.0; // Provide a default value if null
+          double y = position.y ?? 0.0; // Provide a default value if null
+          ChannelResponse? response;
+
+          do {
+            response = await _gameChannel?.sendBroadcastMessage(
+              event: 'game_state',
+              payload: {'x': x, 'y': y, 'health': health},
+            );
+            // Handle a brief pause to mitigate rapid send rate
+            await Future.delayed(Duration.zero);
+            if (mounted) {
+              setState(() {});
+            }
+          } while (response == ChannelResponse.rateLimited && health > 0);
+        }
       },
       onGameOver: (playerWon) async {
         await showDialog(
@@ -73,7 +96,9 @@ class _GamePageState extends State<GamePage> {
               TextButton(
                 onPressed: () async {
                   Navigator.of(context).pop();
-                  await supabase.removeChannel(_gameChannel!);
+                  if (_gameChannel != null) {
+                    await supabase.removeChannel(_gameChannel!);
+                  }
                   _openLobbyDialog();
                 },
                 child: const Text('Back to Lobby'),
@@ -84,9 +109,9 @@ class _GamePageState extends State<GamePage> {
       },
     );
 
-    await Future.delayed(Duration.zero);
+    await Future.delayed(Duration.zero); // Ensures UI is ready or other initial setup
     if (mounted) {
-      _openLobbyDialog();
+      _openLobbyDialog(); // Opens the lobby dialog post-initialization
     }
   }
 
@@ -94,31 +119,40 @@ class _GamePageState extends State<GamePage> {
     showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => _LobbyDialog(
-          onGameStarted: (gameId) async {
-            await Future.delayed(Duration.zero);
-            setState(() {});
-            _game.startNewGame();
-            _gameChannel = supabase.channel(gameId,
-                opts: const RealtimeChannelConfig(ack: true));
-            _gameChannel!
-                .onBroadcast(
-              event: 'game_state',
-              callback: (payload, [_]) {
-                final position = Vector2(
-                    payload['x'] as double, payload['y'] as double);
-                final opponentHealth = payload['health'] as int;
-                _game.updateOpponent(
-                    position: position, health: opponentHealth);
-                if (opponentHealth <= 0 && !_game.isGameOver) {
-                  _game.isGameOver = true;
-                  _game.onGameOver(true);
+        builder: (BuildContext context) {
+          return _LobbyDialog(
+            onGameStarted: (String gameId) async {
+              // Setup the channel for the game based on gameId
+              _gameChannel = supabase.channel(gameId, opts: const RealtimeChannelConfig(ack: true));
+              await _gameChannel!.subscribe();
+
+              // Handling broadcasts of game state
+              _gameChannel!.onBroadcast(event: 'game_state', callback: (payload, [_]) {
+                if (payload != null) {
+                  double x = (payload['x'] as num?)?.toDouble() ?? 0.0; // Safely cast to double with default
+                  double y = (payload['y'] as num?)?.toDouble() ?? 0.0; // Safely cast to double with default
+                  int health = payload['health'] as int? ?? 100; // Default health if not provided
+
+                  // Updating opponent's position and health
+                  _game.updateOpponent(position: Vector2(x, y), health: health);
+
+                  // Check if the game should end
+                  if (health <= 0 && !_game.isGameOver) {
+                    _game.isGameOver = true;
+                    _game.onGameOver(true);
+                  }
                 }
-              },
-            )
-                .subscribe();
-          },
-        ));
+              });
+
+              // Ensure the game starts with a clean state
+              await Future.delayed(Duration.zero); // Ensure all asynchronous initializations are complete
+              setState(() {
+                _game.startNewGame(); // Start or restart the game
+              });
+            },
+          );
+        }
+    );
   }
 }
 

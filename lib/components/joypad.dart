@@ -91,24 +91,27 @@ class JoypadState extends State<Joypad> {
   }
 
   Direction getDirectionFromOffset(Offset offset) {
-    final double dx = offset.dx;
-    final double dy = offset.dy;
-    if (dx.abs() > 20 && dy.abs() > 20) { // Adjust the threshold as needed
-      if (dx > 0 && dy < 0) {
-        return Direction.upRight;
-      } else if (dx < 0 && dy < 0) {
-        return Direction.upLeft;
-      } else if (dx < 0 && dy > 0) {
-        return Direction.downLeft;
-      } else if (dx > 0 && dy > 0) {
-        return Direction.downRight;
-      }
-    } else if (dx.abs() > dy.abs()) {
-      return dx > 0 ? Direction.right : Direction.left;
-    } else if (dy.abs() > dx.abs()) {
-      return dy > 0 ? Direction.down : Direction.up;
+    final double angle = offset.direction;
+    if (offset.distance < 10) return Direction.none;
+
+    // 8 방향 정의
+    if (angle >= -pi / 8 && angle < pi / 8) {
+      return Direction.right;
+    } else if (angle >= pi / 8 && angle < 3 * pi / 8) {
+      return Direction.downRight;
+    } else if (angle >= 3 * pi / 8 && angle < 5 * pi / 8) {
+      return Direction.down;
+    } else if (angle >= 5 * pi / 8 && angle < 7 * pi / 8) {
+      return Direction.downLeft;
+    } else if (angle >= 7 * pi / 8 || angle < -7 * pi / 8) {
+      return Direction.left;
+    } else if (angle >= -7 * pi / 8 && angle < -5 * pi / 8) {
+      return Direction.upLeft;
+    } else if (angle >= -5 * pi / 8 && angle < -3 * pi / 8) {
+      return Direction.up;
+    } else {
+      return Direction.upRight;
     }
-    return Direction.none;
   }
 
   void _startMovementTimer() {

@@ -1,5 +1,5 @@
 // dart imports
-import 'dart:async';
+import 'dart:async' as async;
 import 'dart:math';
 
 // flutter imports
@@ -19,6 +19,7 @@ import 'package:flame_realtime_shooting/components/joypad.dart';
 
 class MyGame extends FlameGame with HasCollisionDetection {
   static final Vector2 worldSize = Vector2(2000, 920);
+  late World _world;
   late Player _player, _opponent;
   late CameraComponent _camera;
   late SpriteComponent _map;
@@ -47,9 +48,10 @@ class MyGame extends FlameGame with HasCollisionDetection {
   Future<void> onLoad() async {
     await super.onLoad();
 
-    double maxSize = max(size.x, size.y);
-    print(size.x);
-    print(size.y);
+    _world = World();
+    await add(_world);
+    // print(size.x);
+    // print(size.y);
 
     _playerBulletImage = await images.load('player-bullet.png');
     _opponentBulletImage = await images.load('opponent-bullet.png');
@@ -58,14 +60,17 @@ class MyGame extends FlameGame with HasCollisionDetection {
     _player = await createPlayer('player.png', true);
     _opponent = await createPlayer('opponent.png', false);
 
-    print('height = ' + _map.height.toString());
-    print('width = ' + _map.width.toString());
+    // print('height = ' + _map.height.toString());
+    // print('width = ' + _map.width.toString());
 
-    final world = World(children:[_map, _player, _opponent]);
-    await add(world);
+    // final world = World(children:[_map, _player, _opponent]);
+    _world.add(_map);
+    _world.add(_player);
+    _world.add(_opponent);
+
 
     _camera = CameraComponent(
-      world: world,
+      world: _world,
       viewport: FixedResolutionViewport(resolution: worldSize),
     );
     await add(_camera);
@@ -94,9 +99,8 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
     for (final child in children) {
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
-        _playerHealthPoint = _playerHealthPoint - child.damage;
-        final mirroredPosition = _player.getMirroredPercentPosition();
-        onGameStateUpdate(mirroredPosition, _playerHealthPoint);
+        _playerHealthPoint -= child.damage;
+        onGameStateUpdate(_player.position, _playerHealthPoint);  // 사용 위치 변경
         _player.updateHealth(_playerHealthPoint / _initialHealthPoints);
       }
     }
@@ -117,49 +121,46 @@ class MyGame extends FlameGame with HasCollisionDetection {
         child.removeFromParent();
       }
     }
-
-    // _shootBullets();
   }
 
-  Future<void> _shootBullets() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final playerBulletInitialPosition = Vector2.copy(_player.position)
-      ..y -= Player.radius;
-    final playerBulletVelocities = [
+  void fireBullets(int setsCount) {
+    List<Vector2> velocities = [
       Vector2(0, -100),
       Vector2(60, -80),
       Vector2(-60, -80),
     ];
-    for (final bulletVelocity in playerBulletVelocities) {
-      add((Bullet(
-        isMine: true,
-        velocity: bulletVelocity,
-        image: _playerBulletImage,
-        initialPosition: playerBulletInitialPosition,
-      )));
-    }
+    int currentSet = 0;
 
-    final opponentBulletInitialPosition = Vector2.copy(_opponent.position)
-      ..y += Player.radius;
-    final opponentBulletVelocities = [
-      Vector2(0, 100),
-      Vector2(60, 80),
-      Vector2(-60, 80),
-    ];
-    for (final bulletVelocity in opponentBulletVelocities) {
-      add((Bullet(
-        isMine: false,
-        velocity: bulletVelocity,
-        image: _opponentBulletImage,
-        initialPosition: opponentBulletInitialPosition,
-      )));
-    }
+    // Set up the periodic timer
+    async.Timer.periodic(Duration(milliseconds: 500), (timer) {
+      // Check if the required number of sets has been reached
+      if (currentSet >= setsCount) {
+        timer.cancel();  // Stop the timer
+        return;
+      }
 
-    _shootBullets();
+      // Calculate the initial position for the bullets
+      Vector2 initialPosition = Vector2.copy(_player.position)..y -= Player.radius;
+
+      // Fire bullets with different velocities
+      for (Vector2 velocity in velocities) {
+        Bullet bullet = Bullet(
+          isMine: true,
+          velocity: velocity,
+          image: _playerBulletImage,
+          initialPosition: initialPosition,
+        );
+        bullet.priority = 1;  // Render priority
+        bullet.debugMode = true;  // Optional: for visual debugging
+        _world.add(bullet);
+      }
+
+      currentSet++;
+    });
   }
 
   void updateOpponent({required Vector2 position, required int health}) {
-    _opponent.position = Vector2(size.x * position.x, size.y * position.y);
+    _opponent.position = position; // Direct assignment of new position
     _opponent.updateHealth(health / _initialHealthPoints);
   }
 
@@ -169,7 +170,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
   }
 
   void handleJoypadDirection(Direction direction) {
-    const double speed = 5;
+    const double speed = 2;
     Vector2 movementVector;
 
     _currentJoypadDirection = direction;
@@ -205,16 +206,15 @@ class MyGame extends FlameGame with HasCollisionDetection {
     }
 
     Vector2 newPosition = _player.position + movementVector;
-    newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Assuming the player is a square for simplicity
+    newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Ensure within bounds
     _player.position = newPosition;
 
     // update position and potentially other game state variables
-    final mirroredPosition = _player.getMirroredPercentPosition();
-    onGameStateUpdate(mirroredPosition, _playerHealthPoint);
+    onGameStateUpdate(_player.position, _playerHealthPoint);
   }
 
   void handleMovementBasedOnJoystickDirection(double dt) {
-    final double speed = 5 * dt;
+    final double speed = 2 * dt;
     Vector2 movementVector = Vector2.zero();
 
     switch (_currentJoypadDirection) {
@@ -242,12 +242,32 @@ class MyGame extends FlameGame with HasCollisionDetection {
       case Direction.downRight:
         movementVector = Vector2(speed, speed);
         break;
-      case Direction.none:
-        return;
+      default:
+        movementVector = Vector2.zero(); // Just a fallback, ideally never reached
     }
 
-    Vector2 newPosition = _player.position + movementVector;
-    newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Assuming the player is a square for simplicity
-    _player.position = newPosition;
+    // Vector2 newPosition = _player.position + movementVector;
+    // newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Assuming the player is a square for simplicity
+    // _player.position = newPosition;
+
+    Vector2 proposedNewPosition = _player.position + movementVector;
+    proposedNewPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Ensure within bounds
+    _player.position = proposedNewPosition;
+
+    // if (!isCollide(proposedNewPosition, _opponent)) {
+    //     _player.position = proposedNewPosition;
+    // }
+
+    // Directly update using the actual position
+    onGameStateUpdate(_player.position, _playerHealthPoint);
+  }
+
+  // Simple collision detection method
+  bool isCollide(Vector2 newPosition, Player opponent) {
+    // Calculate a hypothetical collision rectangle for the new position
+    final playerRect = newPosition.toRect().inflate(Player.radius); // Assuming radius is half of player size
+    final opponentRect = opponent.position.toRect().inflate(Player.radius);
+
+    return playerRect.overlaps(opponentRect);
   }
 }
