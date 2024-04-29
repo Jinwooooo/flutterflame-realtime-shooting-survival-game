@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // self imports
-import 'game/game_page.dart';
+import 'package:flame_realtime_shooting/game/game_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +46,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'WIP KJ4 L5 T4 Proj',
+      title: 'KJ4L5T4',
       debugShowCheckedModeBanner: false,
       home: GamePage(),
     );

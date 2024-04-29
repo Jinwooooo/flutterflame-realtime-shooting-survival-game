@@ -1,9 +1,14 @@
+// dart imports
 import 'dart:async';
 
+// flutter imports
+import 'package:flutter/material.dart';
+
+// flame imports
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_realtime_shooting/game/bullet.dart';
-import 'package:flutter/material.dart';
+
 
 class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
@@ -20,9 +25,14 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     height = radius * 2;
 
     final initialX = gameRef.size.x / 2;
+    final initialY = gameRef.size.y / 2;
+
+    // initialPosition = _isMyPlayer
+    //     ? Vector2(initialX, gameRef.size.y * 0.8)
+    //     : Vector2(initialX, gameRef.size.y * 0.2);
     initialPosition = _isMyPlayer
-        ? Vector2(initialX, gameRef.size.y * 0.8)
-        : Vector2(initialX, gameRef.size.y * 0.2);
+        ? Vector2(initialX, initialY + radius)
+        : Vector2(initialX, initialY - radius);
     position = initialPosition;
 
     add(CircleHitbox());
@@ -34,7 +44,6 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     newPosition.clamp(Vector2(radius, radius), gameRef.size - Vector2(radius, radius));
     position = newPosition;
   }
-
 
   void updateHealth(double healthLeft) {
     for (final child in children) {
@@ -53,11 +62,11 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     }
   }
 
-  Vector2 getMirroredPercentPosition() {
-    final mirroredPosition = gameRef.size - position;
-    return Vector2(mirroredPosition.x / gameRef.size.x,
-        mirroredPosition.y / gameRef.size.y);
-  }
+  // Vector2 getMirroredPercentPosition() {
+  //   final mirroredPosition = gameRef.size - position;
+  //   return Vector2(mirroredPosition.x / gameRef.size.x,
+  //       mirroredPosition.y / gameRef.size.y);
+  // }
 }
 
 class _Gauge extends PositionComponent {

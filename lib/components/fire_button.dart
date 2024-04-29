@@ -1,7 +1,7 @@
-// Dart imports
+// dart imports
 import 'dart:async';
 
-// Flutter imports
+// flutter imports
 import 'package:flutter/material.dart';
 
 class FireButton extends StatefulWidget {

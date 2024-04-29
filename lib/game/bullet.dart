@@ -1,5 +1,7 @@
+// dart imports
 import 'dart:async';
 
+// flame imports
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/image_composition.dart' as flame_image;

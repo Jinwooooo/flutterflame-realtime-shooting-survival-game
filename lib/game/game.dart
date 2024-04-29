@@ -14,8 +14,10 @@ import 'package:flame_realtime_shooting/game/bullet.dart';
 import 'package:flame_realtime_shooting/game/player.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
 
+late Vector2 worldSize;
+
 class MyGame extends FlameGame with HasCollisionDetection {
-  late Vector2 worldSize;
+  // late Vector2 worldSize;
   late Player _player, _opponent;
   late CameraComponent _camera;
   static const _initialHealthPoints = 100;
@@ -91,8 +93,9 @@ class MyGame extends FlameGame with HasCollisionDetection {
     for (final child in children) {
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
         _playerHealthPoint = _playerHealthPoint - child.damage;
-        final mirroredPosition = _player.getMirroredPercentPosition();
-        onGameStateUpdate(mirroredPosition, _playerHealthPoint);
+        // final mirroredPosition = _player.getMirroredPercentPosition();
+        // onGameStateUpdate(mirroredPosition, _playerHealthPoint);
+        onGameStateUpdate(_player.position, _playerHealthPoint);
         _player.updateHealth(_playerHealthPoint / _initialHealthPoints);
       }
     }
@@ -202,47 +205,47 @@ class MyGame extends FlameGame with HasCollisionDetection {
     Vector2 newPosition = _player.position + movementVector;
     newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Assuming the player is a square for simplicity
     _player.position = newPosition;
+    onGameStateUpdate(_player.position, _playerHealthPoint);
 
-    // update position and potentially other game state variables
-    final mirroredPosition = _player.getMirroredPercentPosition();
-    onGameStateUpdate(mirroredPosition, _playerHealthPoint);
+    // final mirroredPosition = _player.getMirroredPercentPosition();
+    // onGameStateUpdate(mirroredPosition, _playerHealthPoint);
   }
 
-  void handleMovementBasedOnJoystickDirection(double dt) {
-    final double speed = 2 * dt;
-    Vector2 movementVector = Vector2.zero();
+  // void handleMovementBasedOnJoypadDirection(double dt) {
+  //   final double speed = 2 * dt;
+  //   Vector2 movementVector = Vector2.zero();
 
-    switch (_currentJoypadDirection) {
-      case Direction.up:
-        movementVector = Vector2(0, -speed);
-        break;
-      case Direction.down:
-        movementVector = Vector2(0, speed);
-        break;
-      case Direction.left:
-        movementVector = Vector2(-speed, 0);
-        break;
-      case Direction.right:
-        movementVector = Vector2(speed, 0);
-        break;
-      case Direction.upLeft:
-        movementVector = Vector2(-speed, -speed);
-        break;
-      case Direction.upRight:
-        movementVector = Vector2(speed, -speed);
-        break;
-      case Direction.downLeft:
-        movementVector = Vector2(-speed, speed);
-        break;
-      case Direction.downRight:
-        movementVector = Vector2(speed, speed);
-        break;
-      case Direction.none:
-        return;
-    }
+  //   switch (_currentJoypadDirection) {
+  //     case Direction.up:
+  //       movementVector = Vector2(0, -speed);
+  //       break;
+  //     case Direction.down:
+  //       movementVector = Vector2(0, speed);
+  //       break;
+  //     case Direction.left:
+  //       movementVector = Vector2(-speed, 0);
+  //       break;
+  //     case Direction.right:
+  //       movementVector = Vector2(speed, 0);
+  //       break;
+  //     case Direction.upLeft:
+  //       movementVector = Vector2(-speed, -speed);
+  //       break;
+  //     case Direction.upRight:
+  //       movementVector = Vector2(speed, -speed);
+  //       break;
+  //     case Direction.downLeft:
+  //       movementVector = Vector2(-speed, speed);
+  //       break;
+  //     case Direction.downRight:
+  //       movementVector = Vector2(speed, speed);
+  //       break;
+  //     case Direction.none:
+  //       return;
+  //   }
 
-    Vector2 newPosition = _player.position + movementVector;
-    newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Assuming the player is a square for simplicity
-    _player.position = newPosition;
-  }
+  //   Vector2 newPosition = _player.position + movementVector;
+  //   newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Assuming the player is a square for simplicity
+  //   _player.position = newPosition;
+  // }
 }
