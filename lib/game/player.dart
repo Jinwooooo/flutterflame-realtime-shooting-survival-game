@@ -1,17 +1,9 @@
-// dart imports
 import 'dart:async';
-import 'dart:math';
 
-// flutter imports
-import 'package:flutter/material.dart';
-
-// flame imports
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-
-// self imports
 import 'package:flame_realtime_shooting/game/bullet.dart';
-
+import 'package:flutter/material.dart';
 
 class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
@@ -37,11 +29,12 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     add(_Gauge());
     await super.onLoad();
   }
-
   void move(Vector2 delta) {
-    final newPosition = position + delta;
+    Vector2 newPosition = position + delta;
+    newPosition.clamp(Vector2(radius, radius), gameRef.size - Vector2(radius, radius));
     position = newPosition;
   }
+
 
   void updateHealth(double healthLeft) {
     for (final child in children) {
@@ -53,28 +46,12 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-      super.onCollision(intersectionPoints, other);
-      if (other is Player && _isMyPlayer) {
-          // Determine the direction of the push based on the position of the colliders
-          Vector2 pushDirection = other.position - position;
-          pushDirection.normalize(); // Normalize to get the direction vector
-          other.position += pushDirection * 5; // Move the opponent
-      }
-
-      if (other is Bullet && _isMyPlayer != other.isMine) {
-        other.hasBeenHit = true;
-        other.removeFromParent();
-      }
+    super.onCollision(intersectionPoints, other);
+    if (other is Bullet && _isMyPlayer != other.isMine) {
+      other.hasBeenHit = true;
+      other.removeFromParent();
+    }
   }
-
-  // @override
-  // void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-  //   super.onCollision(intersectionPoints, other);
-  //   if (other is Bullet && _isMyPlayer != other.isMine) {
-  //     other.hasBeenHit = true;
-  //     other.removeFromParent();
-  //   }
-  // }
 
   Vector2 getMirroredPercentPosition() {
     final mirroredPosition = gameRef.size - position;
@@ -119,4 +96,5 @@ class _Gauge extends PositionComponent {
                   ? Colors.orange
                   : Colors.red);
   }
+
 }
