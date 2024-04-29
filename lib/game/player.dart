@@ -51,6 +51,7 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     }
   }
 
+
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
