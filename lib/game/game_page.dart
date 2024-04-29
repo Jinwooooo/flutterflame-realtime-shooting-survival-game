@@ -11,8 +11,9 @@ import 'package:uuid/uuid.dart';
 
 // self imports
 import 'package:flame_realtime_shooting/main.dart';
-import 'package:flame_realtime_shooting/components/joypad.dart';
 import 'package:flame_realtime_shooting/game/game.dart';
+import 'package:flame_realtime_shooting/components/joypad.dart';
+import 'package:flame_realtime_shooting/components/fire_button.dart';
 
 
 class GamePage extends StatefulWidget {
@@ -40,9 +41,22 @@ class _GamePageState extends State<GamePage> {
               _game.handleJoypadDirection(direction);
             }),
           ),
+          Positioned(
+            right: 20,
+            bottom: 20,
+            child: FireButton(
+              onFirePressed: _fire,
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  void _fire() {
+  if (_game != null) {
+    _game.fireBullets(5);
+    }
   }
 
   @override

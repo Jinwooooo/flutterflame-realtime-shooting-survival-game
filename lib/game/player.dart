@@ -20,9 +20,6 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Player({required bool isMe}) : _isMyPlayer = isMe;
   final bool _isMyPlayer;
   static const radius = 20.0;
-  // bool canBePushed = true; // player collisions
-  // bool isMoving = false; // player collisions
-  // double pushResistance = 1.0; // player collisions
 
   @override
   Future<void>? onLoad() async {
@@ -54,7 +51,6 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     }
   }
 
-  // In the Player class
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
       super.onCollision(intersectionPoints, other);
@@ -63,6 +59,11 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
           Vector2 pushDirection = other.position - position;
           pushDirection.normalize(); // Normalize to get the direction vector
           other.position += pushDirection * 5; // Move the opponent
+      }
+
+      if (other is Bullet && _isMyPlayer != other.isMine) {
+        other.hasBeenHit = true;
+        other.removeFromParent();
       }
   }
 

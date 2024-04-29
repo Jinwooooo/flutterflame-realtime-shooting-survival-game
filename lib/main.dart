@@ -46,7 +46,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'UFO Shooting Game',
+      title: 'WIP KJ4 L5 T4 Proj',
       debugShowCheckedModeBanner: false,
       home: GamePage(),
     );
