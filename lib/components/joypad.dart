@@ -29,7 +29,7 @@ class JoypadState extends State<Joypad> {
         height: 120,
         width: 120,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,  // This enforces a circular shape for the outer circle
+          shape: BoxShape.circle,
           color: Colors.grey[800],
           border: Border.all(color: Colors.white, width: 2),
         ),
@@ -37,12 +37,11 @@ class JoypadState extends State<Joypad> {
           onPanStart: _handlePanStart,
           onPanUpdate: _handlePanUpdate,
           onPanEnd: _handlePanEnd,
-          child: Center(  // Ensure the controlling stick is centered
+          child: Center(
             child: Transform.translate(
               offset: delta,
               child: CircleAvatar(
                 backgroundColor: Colors.grey[300],
-                // The radius is set to half the size of the outer circle
                 radius: 30,
               ),
             ),
@@ -84,7 +83,7 @@ class JoypadState extends State<Joypad> {
     setState(() {
       delta = newDelta;
     });
-    direction = getDirectionFromOffset(newDelta); // Update the direction here
+    direction = getDirectionFromOffset(newDelta);
     if (widget.onDirectionChanged != null) {
       widget.onDirectionChanged!(direction);
     }
@@ -93,7 +92,7 @@ class JoypadState extends State<Joypad> {
   Direction getDirectionFromOffset(Offset offset) {
     final double dx = offset.dx;
     final double dy = offset.dy;
-    if (dx.abs() > 20 && dy.abs() > 20) { // Adjust the threshold as needed
+    if (dx.abs() > 10 && dy.abs() > 10) {
       if (dx > 0 && dy < 0) {
         return Direction.upRight;
       } else if (dx < 0 && dy < 0) {

@@ -64,23 +64,16 @@ class _GamePageState extends State<GamePage> {
       //     setState(() {});
       //   } while (response == ChannelResponse.rateLimited && health <= 0);
       // },
-      // onGameStateUpdate: (Vector2 position, int health) async {
-      //   ChannelResponse response;
-      //   do {
-      //       response = await _gameChannel!.sendBroadcastMessage(
-      //           event: 'game_state',
-      //           payload: {'x': position.x / worldSize.x, 'y': position.y / worldSize.y, 'health': health},
-      //       );
-      //       await Future.delayed(Duration.zero);
-      //       setState(() {});
-      //   } while (response == ChannelResponse.rateLimited && health <= 0);
-      // },
-      onGameStateUpdate: (Vector2 position, int health) async {
+      onGameStateUpdate: (Vector2 position, int health, Direction direction) async {
         ChannelResponse response;
         do {
             response = await _gameChannel!.sendBroadcastMessage(
                 event: 'game_state',
-                payload: {'x': position.x / worldSize.x, 'y': position.y / worldSize.y, 'health': health},
+                payload: {
+                  'x': position.x / worldSize.x, 
+                  'y': position.y / worldSize.y, 
+                  'health': health, 
+                  'direction': direction.index},
             );
             await Future.delayed(Duration.zero);
             setState(() {});
@@ -145,8 +138,13 @@ class _GamePageState extends State<GamePage> {
                         // final position = Vector2((payload['x'] as double) * worldSize.x, (payload['y'] as double) * worldSize.y);
                         final position = Vector2((payload['x'] as double), (payload['y'] as double));
                         final opponentHealth = payload['health'] as int;
+                        final directionIndex = payload['direction'] as int;
+                        final direction = Direction.values[directionIndex];
                         _game.updateOpponent(
-                            position: position, health: opponentHealth);
+                            position: position, 
+                            health: opponentHealth,
+                            direction: direction,
+                          );
                         if (opponentHealth <= 0 && !_game.isGameOver) {
                             _game.isGameOver = true;
                             _game.onGameOver(true);

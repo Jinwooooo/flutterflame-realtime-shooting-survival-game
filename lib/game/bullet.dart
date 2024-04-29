@@ -8,16 +8,10 @@ import 'package:flame/image_composition.dart' as flame_image;
 
 class Bullet extends PositionComponent with CollisionCallbacks, HasGameRef {
   final Vector2 velocity;
-
   final flame_image.Image image;
-
   static const radius = 5.0;
-
   bool hasBeenHit = false;
-
   final bool isMine;
-
-  /// Damage that it deals when it hits the player
   final int damage = 5;
 
   Bullet({

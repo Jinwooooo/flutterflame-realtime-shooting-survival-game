@@ -7,7 +7,11 @@ import 'package:flutter/material.dart';
 // flame imports
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/sprite.dart';
+
+// self imports
 import 'package:flame_realtime_shooting/game/bullet.dart';
+import 'package:flame_realtime_shooting/components/joypad.dart';
 
 
 class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
@@ -16,7 +20,11 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Timer? moveTimer;
   Player({required bool isMe}) : _isMyPlayer = isMe;
   final bool _isMyPlayer;
-  static const radius = 20.0;
+  static const radius = 40.0;
+
+  Map<Direction, Sprite> directionSprites = {};
+  Direction currentDirection = Direction.up;
+  late SpriteComponent tankSprite;
 
   @override
   Future<void>? onLoad() async {
@@ -27,22 +35,42 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     final initialX = gameRef.size.x / 2;
     final initialY = gameRef.size.y / 2;
 
-    // initialPosition = _isMyPlayer
-    //     ? Vector2(initialX, gameRef.size.y * 0.8)
-    //     : Vector2(initialX, gameRef.size.y * 0.2);
     initialPosition = _isMyPlayer
         ? Vector2(initialX, initialY + radius)
         : Vector2(initialX, initialY - radius);
     position = initialPosition;
 
+    directionSprites = {
+      Direction.up: Sprite(await gameRef.images.load('tank-1-0.png')),
+      Direction.upRight: Sprite(await gameRef.images.load('tank-1-1.png')),
+      Direction.right: Sprite(await gameRef.images.load('tank-1-2.png')),
+      Direction.downRight: Sprite(await gameRef.images.load('tank-1-3.png')),
+      Direction.down: Sprite(await gameRef.images.load('tank-1-4.png')),
+      Direction.downLeft: Sprite(await gameRef.images.load('tank-1-5.png')),
+      Direction.left: Sprite(await gameRef.images.load('tank-1-6.png')),
+      Direction.upLeft: Sprite(await gameRef.images.load('tank-1-7.png')),
+    };
+    currentDirection = Direction.up;
+    tankSprite = SpriteComponent(
+      sprite: directionSprites[currentDirection],
+      size: Vector2.all(radius * 2),
+    );
+
+    add(tankSprite);
     add(CircleHitbox());
     add(_Gauge());
     await super.onLoad();
   }
+
   void move(Vector2 delta) {
     Vector2 newPosition = position + delta;
     newPosition.clamp(Vector2(radius, radius), gameRef.size - Vector2(radius, radius));
     position = newPosition;
+  }
+
+  void updateDirection(Direction newDirection) {
+    currentDirection = newDirection;
+    tankSprite.sprite = directionSprites[currentDirection];
   }
 
   void updateHealth(double healthLeft) {
@@ -61,12 +89,6 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
       other.removeFromParent();
     }
   }
-
-  // Vector2 getMirroredPercentPosition() {
-  //   final mirroredPosition = gameRef.size - position;
-  //   return Vector2(mirroredPosition.x / gameRef.size.x,
-  //       mirroredPosition.y / gameRef.size.y);
-  // }
 }
 
 class _Gauge extends PositionComponent {
@@ -105,5 +127,4 @@ class _Gauge extends PositionComponent {
                   ? Colors.orange
                   : Colors.red);
   }
-
 }

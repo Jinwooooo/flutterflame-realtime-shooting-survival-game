@@ -17,7 +17,6 @@ import 'package:flame_realtime_shooting/components/joypad.dart';
 late Vector2 worldSize;
 
 class MyGame extends FlameGame with HasCollisionDetection {
-  // late Vector2 worldSize;
   late Player _player, _opponent;
   late CameraComponent _camera;
   static const _initialHealthPoints = 100;
@@ -26,7 +25,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
   Direction _currentJoypadDirection = Direction.none;
 
   final void Function(bool didWin) onGameOver;
-  final void Function(Vector2 position, int health) onGameStateUpdate;
+  final void Function(Vector2 position, int health, Direction direction) onGameStateUpdate;
 
   MyGame({
     required this.onGameOver,
@@ -62,6 +61,8 @@ class MyGame extends FlameGame with HasCollisionDetection {
   Future<void> setupPlayers() async {
     _player = await createPlayer('player.png', true);
     _opponent = await createPlayer('opponent.png', false);
+    _player.debugMode = true;
+    _opponent.debugMode = true;
     add(_player);
     add(_opponent);
   }
@@ -73,8 +74,8 @@ class MyGame extends FlameGame with HasCollisionDetection {
   }
 
   Future<void> setupBackground() async {
-    final backgroundImage = await images.load('background.jpg');
-    final background = SpriteComponent(sprite: Sprite(backgroundImage), size: Vector2(1000, 1000));
+    final backgroundImage = await images.load('brown-background.avif');
+    final background = SpriteComponent(sprite: Sprite(backgroundImage), size: Vector2(worldSize[0], worldSize[1]));
     background.priority = -1;
     add(background);
   }
@@ -95,7 +96,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
         _playerHealthPoint = _playerHealthPoint - child.damage;
         // final mirroredPosition = _player.getMirroredPercentPosition();
         // onGameStateUpdate(mirroredPosition, _playerHealthPoint);
-        onGameStateUpdate(_player.position, _playerHealthPoint);
+        onGameStateUpdate(_player.position, _playerHealthPoint, _player.currentDirection);
         _player.updateHealth(_playerHealthPoint / _initialHealthPoints);
       }
     }
@@ -156,9 +157,10 @@ class MyGame extends FlameGame with HasCollisionDetection {
     _shootBullets();
   }
 
-  void updateOpponent({required Vector2 position, required int health}) {
+  void updateOpponent({required Vector2 position, required int health, required Direction direction}) {
     _opponent.position = Vector2(size.x * position.x, size.y * position.y);
     _opponent.updateHealth(health / _initialHealthPoints);
+    _opponent.updateDirection(direction);
   }
 
   void endGame(bool playerWon) {
@@ -170,7 +172,9 @@ class MyGame extends FlameGame with HasCollisionDetection {
     const double speed = 2;
     Vector2 movementVector;
 
-    _currentJoypadDirection = direction;
+    if(direction != Direction.none) {
+      _currentJoypadDirection = direction;
+    }
 
     switch (direction) {
       case Direction.up:
@@ -203,49 +207,11 @@ class MyGame extends FlameGame with HasCollisionDetection {
     }
 
     Vector2 newPosition = _player.position + movementVector;
-    newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Assuming the player is a square for simplicity
+    newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));
     _player.position = newPosition;
-    onGameStateUpdate(_player.position, _playerHealthPoint);
-
-    // final mirroredPosition = _player.getMirroredPercentPosition();
-    // onGameStateUpdate(mirroredPosition, _playerHealthPoint);
+    if (direction != Direction.none) {
+      _player.updateDirection(direction);
+    }
+    onGameStateUpdate(_player.position, _playerHealthPoint, _player.currentDirection);
   }
-
-  // void handleMovementBasedOnJoypadDirection(double dt) {
-  //   final double speed = 2 * dt;
-  //   Vector2 movementVector = Vector2.zero();
-
-  //   switch (_currentJoypadDirection) {
-  //     case Direction.up:
-  //       movementVector = Vector2(0, -speed);
-  //       break;
-  //     case Direction.down:
-  //       movementVector = Vector2(0, speed);
-  //       break;
-  //     case Direction.left:
-  //       movementVector = Vector2(-speed, 0);
-  //       break;
-  //     case Direction.right:
-  //       movementVector = Vector2(speed, 0);
-  //       break;
-  //     case Direction.upLeft:
-  //       movementVector = Vector2(-speed, -speed);
-  //       break;
-  //     case Direction.upRight:
-  //       movementVector = Vector2(speed, -speed);
-  //       break;
-  //     case Direction.downLeft:
-  //       movementVector = Vector2(-speed, speed);
-  //       break;
-  //     case Direction.downRight:
-  //       movementVector = Vector2(speed, speed);
-  //       break;
-  //     case Direction.none:
-  //       return;
-  //   }
-
-  //   Vector2 newPosition = _player.position + movementVector;
-  //   newPosition.clamp(Vector2.zero(), worldSize - Vector2.all(_player.width));  // Assuming the player is a square for simplicity
-  //   _player.position = newPosition;
-  // }
 }
