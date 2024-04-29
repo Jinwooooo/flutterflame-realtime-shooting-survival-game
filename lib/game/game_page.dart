@@ -1,20 +1,17 @@
+// flame imports
+import 'package:flame/game.dart';
+
 // flutter imports
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-// flame imports
-import 'package:flame/game.dart';
 
 // realtime sync imports
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-// self imports
-import 'package:flame_realtime_shooting/main.dart';
-import 'package:flame_realtime_shooting/game/game.dart';
-import 'package:flame_realtime_shooting/components/joypad.dart';
-import 'package:flame_realtime_shooting/components/fire_button.dart';
-
+import '../components/joypad.dart';
+import '../main.dart';
+import 'game.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key});
@@ -33,6 +30,7 @@ class _GamePageState extends State<GamePage> {
       body: Stack(
         fit: StackFit.expand,
         children: [
+          Image.asset('assets/images/background.jpg', fit: BoxFit.cover),
           GameWidget(game: _game),
           Positioned(
             left: 20,
@@ -41,22 +39,9 @@ class _GamePageState extends State<GamePage> {
               _game.handleJoypadDirection(direction);
             }),
           ),
-          Positioned(
-            right: 20,
-            bottom: 20,
-            child: FireButton(
-              onFirePressed: _fire,
-            ),
-          ),
         ],
       ),
     );
-  }
-
-  void _fire() {
-    if (_game != null) {
-      _game.fireBullets(5);
-    }
   }
 
   @override
