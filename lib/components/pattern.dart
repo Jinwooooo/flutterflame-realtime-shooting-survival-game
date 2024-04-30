@@ -9,7 +9,7 @@ import 'dart:async' as async;
 class BombZone extends PositionComponent with HasGameRef, CollisionCallbacks {
   bool _isActivated = false;
   bool hasBeenHit = false;  // 충돌 처리 여부 표시
-  static const double damage = 5.0;
+  static const double damage = 1.0;
   static const double radius = 50.0;
   Function? onActivate;
 

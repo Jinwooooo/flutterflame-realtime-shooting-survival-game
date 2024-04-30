@@ -24,8 +24,8 @@ class MyGame extends FlameGame with HasCollisionDetection {
   late async.Timer _bombZoneTimer;
   late Player _player, _opponent;
   late CameraComponent _camera;
-  static const _initialHealthPoints = 100;
-  int _playerHealthPoint = _initialHealthPoints;
+  static const initialHealthPoints = 100;
+  int playerHealthPoint = initialHealthPoints;
   bool isGameOver = true;
   Direction _currentJoypadDirection = Direction.none;
 
@@ -121,19 +121,19 @@ class MyGame extends FlameGame with HasCollisionDetection {
     // Check for bullet hits
     for (final child in children) {
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
-        int newHealth = _playerHealthPoint - child.damage;
+        int newHealth = playerHealthPoint - child.damage;
         updatePlayerHealth(newHealth);
       }
     }
     // Check for bomb zone hits
     for (final child in children) {
       if (child is BombZone && child.hasBeenHit) {
-        int newHealth = _playerHealthPoint - BombZone.damage.toInt(); // Assuming damage can be cast to int
+        int newHealth = playerHealthPoint - BombZone.damage.toInt(); // Assuming damage can be cast to int
         updatePlayerHealth(newHealth);
       }
     }
     // Check if health has dropped to zero
-    if (_playerHealthPoint <= 0) {
+    if (playerHealthPoint <= 0) {
       endGame(false);
     }
   }
@@ -141,7 +141,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
   void startNewGame() {
     isGameOver = false;
-    _playerHealthPoint = _initialHealthPoints;
+    playerHealthPoint = initialHealthPoints;
     children.whereType<Bullet>().forEach((b) => b.removeFromParent());
     children.whereType<Player>().forEach((p) => p.position = p.initialPosition);
 
@@ -214,17 +214,17 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
 
   void updatePlayerHealth(int newHealth, {bool notify = true}) {
-    _playerHealthPoint = max(0, newHealth);
-    if (_playerHealthPoint <= 0) {
+    playerHealthPoint = max(0, newHealth);
+    if (playerHealthPoint <= 0) {
       endGame(false);
     }
     // 체력 정보 업데이트를 네트워크에 알림
     if (notify) {
-      syncHealthWithServer(_playerHealthPoint);
+      syncHealthWithServer(playerHealthPoint);
     }
 
-    onGameStateUpdate(_player.position, _playerHealthPoint);
-    _player.updateHealth(_playerHealthPoint.toDouble() / _initialHealthPoints);
+    onGameStateUpdate(_player.position, playerHealthPoint);
+    _player.updateHealth(playerHealthPoint.toDouble() / initialHealthPoints);
   }
 
   void syncHealthWithServer(int health) {
@@ -235,7 +235,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
   void updateOpponent({required Vector2 position, required int health}) {
     _opponent.position = Vector2(size.x * position.x, size.y * position.y);
-    _opponent.updateHealth(health / _initialHealthPoints);
+    _opponent.updateHealth(health / initialHealthPoints);
   }
 
   void endGame(bool playerWon) {
@@ -286,7 +286,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
             Vector2.all(_player
                 .width)); // Assuming the player is a square for simplicity
     _player.position = newPosition;
-    onGameStateUpdate(_player.position, _playerHealthPoint);
+    onGameStateUpdate(_player.position, playerHealthPoint);
 
   }
 

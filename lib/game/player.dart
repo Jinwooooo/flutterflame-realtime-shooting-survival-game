@@ -20,11 +20,13 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
   late final Vector2 initialPosition;
   Timer? moveTimer;
-  Player({required bool isMe}) : _isMyPlayer = isMe;
-  final bool _isMyPlayer;
+  bool _isMyPlayer;
+  bool _isInCooldown = false;
+  DateTime _lastHitTime = DateTime.now();
+  static const int cooldownPeriod = 2000; // cooldown period in milliseconds
   static const radius = 20.0;
-  late final String id;  // 플레이어 ID
 
+  Player({required bool isMe}) : _isMyPlayer = isMe;
 
   @override
   Future<void>? onLoad() async {
@@ -123,3 +125,6 @@ class _Gauge extends PositionComponent {
     textPainter.paint(canvas, Offset(0, -20)); // 체력바 위에 체력 값을 그립니다.
   }
 }
+
+
+
