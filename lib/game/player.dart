@@ -23,6 +23,8 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Player({required bool isMe}) : _isMyPlayer = isMe;
   final bool _isMyPlayer;
   static const radius = 20.0;
+  late final String id;  // 플레이어 ID
+
 
   @override
   Future<void>? onLoad() async {
@@ -103,5 +105,21 @@ class _Gauge extends PositionComponent {
               : _healthLeft > 0.25
               ? Colors.orange
               : Colors.red);
+
+    // 체력 값을 화면에 표시 (디버깅용)
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: 'Health: ${_healthLeft.toStringAsFixed(2)}',
+        style: TextStyle(color: Colors.white),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+
+    textPainter.layout(
+      minWidth: 0,
+      maxWidth: width,
+    );
+
+    textPainter.paint(canvas, Offset(0, -20)); // 체력바 위에 체력 값을 그립니다.
   }
 }

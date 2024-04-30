@@ -5,13 +5,15 @@ import 'package:flame/palette.dart';
 import 'package:flutter/material.dart';
 import 'package:flame_realtime_shooting/game/player.dart';
 import 'dart:async' as async;
-class BombZone extends PositionComponent with HasGameRef, CollisionCallbacks {
-  static const double damage = 10.0;
-  static const double radius = 50.0;
-  bool _isActivated = false;
-  bool hasBeenHit = false;
 
-  BombZone() {
+class BombZone extends PositionComponent with HasGameRef, CollisionCallbacks {
+  bool _isActivated = false;
+  bool hasBeenHit = false;  // 충돌 처리 여부 표시
+  static const double damage = 5.0;
+  static const double radius = 50.0;
+  Function? onActivate;
+
+  BombZone(Vector2 velocity) {
     anchor = Anchor.center;
     size = Vector2.all(radius * 2);
     add(RectangleHitbox());
@@ -21,7 +23,12 @@ class BombZone extends PositionComponent with HasGameRef, CollisionCallbacks {
   Future<void> onLoad() async {
     super.onLoad();
     _activateBombZone();
-    Future.delayed(const Duration(seconds: 5)).then((_) => removeFromParent());
+    Future.delayed(const Duration(seconds: 5)).then((_) {
+      if (!_isActivated) return;
+      _isActivated = false;
+      if (onActivate != null) onActivate!();
+      removeFromParent();
+    });
   }
 
   void _activateBombZone() {
@@ -34,14 +41,13 @@ class BombZone extends PositionComponent with HasGameRef, CollisionCallbacks {
     if (_isActivated && other is Player && !hasBeenHit) {
       other.updateHealth(-damage);
       hasBeenHit = true;  // 폭탄이 처리되었다고 표시
-      removeFromParent();  // 폭탄을 게임에서 제거
     }
   }
 
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    final paint = Paint()..color = Colors.red.withOpacity(0.5);
+    final paint = Paint()..color = _isActivated ? Colors.red.withOpacity(0.5) : Colors.grey.withOpacity(0.5);
     canvas.drawRect(size.toRect(), paint);
   }
 }

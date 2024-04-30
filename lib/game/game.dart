@@ -34,7 +34,11 @@ class MyGame extends FlameGame with HasCollisionDetection {
     [Vector2(0.3, 0.3), Vector2(0.6, 0.6), Vector2(0.9, 0.1)],
     [Vector2(0.2, 0.1), Vector2(0.4, 0.4), Vector2(0.7, 0.7)],
   ];
-
+  @override
+  void onGameResize(Vector2 canvasSize) {
+    super.onGameResize(canvasSize);
+    worldSize = canvasSize;
+  }
 
   final void Function(bool didWin) onGameOver;
   final void Function(Vector2 position, int health) onGameStateUpdate;
@@ -61,34 +65,8 @@ class MyGame extends FlameGame with HasCollisionDetection {
     setupBombZoneCreation();
   }
 
-  void setupBombZoneCreation() {
-    _bombZoneTimer = async.Timer.periodic(Duration(seconds: 3), (async.Timer timer) {
-      createBombZonesFromPattern();
-    });
-  }
-
-  void createBombZonesFromPattern() {
-    final Random random = Random();
-    int patternIndex = random.nextInt(bombZonePatterns.length);  // 전체 게임에 동일한 인덱스 사용
-    List<Vector2> selectedPattern = bombZonePatterns[patternIndex];
 
 
-    for (Vector2 position in selectedPattern) {
-      final bombZone = BombZone()
-        ..position = Vector2(
-            position.x * worldSize.x - BombZone.radius,
-            position.y * worldSize.y - BombZone.radius)
-        ..size = Vector2.all(BombZone.radius * 2);
-      add(bombZone);
-    }
-  }
-
-
-  @override
-  void onGameResize(Vector2 canvasSize) {
-    super.onGameResize(canvasSize);
-    worldSize = canvasSize;
-  }
 
   Future<void> setupPlayers() async {
     _player = await createPlayer('player.png', true);
@@ -118,38 +96,64 @@ class MyGame extends FlameGame with HasCollisionDetection {
   }
 
 
+  // @override
+  // void update(double dt) {
+  //   super.update(dt);
+  //   if (isGameOver) {
+  //     return;
+  //   }
+  //   for (final child in children) {
+  //     if (child is Bullet && child.hasBeenHit && !child.isMine) {
+  //       int newHealth = _playerHealthPoint - child.damage;
+  //       updatePlayerHealth(newHealth);
+  //     }
+  //   }
+  //   if (_playerHealthPoint <= 0) {
+  //     endGame(false);
+  //   }
+  // }
   @override
   void update(double dt) {
     super.update(dt);
     if (isGameOver) {
       return;
     }
+    // Check for bullet hits
     for (final child in children) {
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
         int newHealth = _playerHealthPoint - child.damage;
         updatePlayerHealth(newHealth);
       }
     }
+    // Check for bomb zone hits
+    for (final child in children) {
+      if (child is BombZone && child.hasBeenHit) {
+        int newHealth = _playerHealthPoint - BombZone.damage.toInt(); // Assuming damage can be cast to int
+        updatePlayerHealth(newHealth);
+      }
+    }
+    // Check if health has dropped to zero
     if (_playerHealthPoint <= 0) {
       endGame(false);
     }
   }
 
+
   void startNewGame() {
     isGameOver = false;
     _playerHealthPoint = _initialHealthPoints;
+    children.whereType<Bullet>().forEach((b) => b.removeFromParent());
+    children.whereType<Player>().forEach((p) => p.position = p.initialPosition);
 
-    for (final child in children) {
-      if (child is Player) {
-        child.position = child.initialPosition;
-      } else if (child is Bullet) {
-        child.removeFromParent();
-      }
-    }
 
-    // _shootBullets();
+    // for (final child in children) {
+    //   if (child is Player) {
+    //     child.position = child.initialPosition;
+    //   } else if (child is Bullet) {
+    //     child.removeFromParent();
+    //   }
+    // }
   }
-
   Future<void> _shootBullets() async {
     await Future.delayed(const Duration(milliseconds: 500));
     final playerBulletInitialPosition = Vector2.copy(_player.position)
@@ -187,23 +191,46 @@ class MyGame extends FlameGame with HasCollisionDetection {
     _shootBullets();
   }
 
-  void updatePlayerHealth(int newHealth) {
-    _playerHealthPoint = newHealth;
+
+  void setupBombZoneCreation() {
+    _bombZoneTimer = async.Timer.periodic(Duration(seconds: 10), (_) => createBombZonesFromPattern());
+  }
+
+  void createBombZonesFromPattern() {
+    final random = Random();
+    var selectedPattern = bombZonePatterns[random.nextInt(bombZonePatterns.length)];
+    for (var position in selectedPattern) {
+      var bombZonePosition = Vector2(
+          worldSize.x * position.x - BombZone.radius,
+          worldSize.y * position.y - BombZone.radius
+      );
+      var bombZone = BombZone(Vector2.zero())
+        ..position = bombZonePosition
+        ..size = Vector2.all(BombZone.radius * 2);
+      add(bombZone);
+    }
+  }
+
+
+
+  void updatePlayerHealth(int newHealth, {bool notify = true}) {
+    _playerHealthPoint = max(0, newHealth);
     if (_playerHealthPoint <= 0) {
-      _playerHealthPoint = 0;
       endGame(false);
     }
+    // 체력 정보 업데이트를 네트워크에 알림
+    if (notify) {
+      syncHealthWithServer(_playerHealthPoint);
+    }
+
     onGameStateUpdate(_player.position, _playerHealthPoint);
     _player.updateHealth(_playerHealthPoint.toDouble() / _initialHealthPoints);
-    syncHealthWithServer(_playerHealthPoint);
   }
 
   void syncHealthWithServer(int health) {
-    supabase.channel("game_channel").sendBroadcastMessage(
-      event: 'health_update',
-      payload: {'health': health},
-    );
+    supabase.channel("game_channel").sendBroadcastMessage(event: 'health_update', payload: {'health': health});
   }
+
 
 
   void updateOpponent({required Vector2 position, required int health}) {
