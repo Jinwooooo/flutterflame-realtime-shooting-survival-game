@@ -14,6 +14,9 @@ import 'package:flame_realtime_shooting/main.dart';
 import 'package:flame_realtime_shooting/game/game.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
 
+import '../components/fire_button.dart';
+import '../components/item_button.dart';
+
 class GamePage extends StatefulWidget {
   const GamePage({super.key});
 
@@ -40,10 +43,38 @@ class _GamePageState extends State<GamePage> {
               _game.handleJoypadDirection(direction);
             }),
           ),
+          Positioned(
+            right: 20,
+            bottom: 10,
+            child: FireButton(
+              // onFirePressed: _fire,
+              // children: [
+              //   FireButton(
+              //     onFirePressed: () {
+              //       // 총을 쏘는 기능 구현 예정
+              //     },
+              //   ),
+              //   SizedBox(height: 10), // 버튼 사이의 간격
+                // ItemButton(
+                //   onFirePressed: () {
+                //     // 아이템 사용 기능 구현 예정
+                //   },
+                // ),
+              // ],
+            ),
+          ),
         ],
       ),
     );
   }
+
+
+  // void _fire() {
+  //   if (_game != null) {
+  //     _game.fireBullets(5);
+  //   }
+  // }
+
 
   @override
   void initState() {
@@ -64,23 +95,18 @@ class _GamePageState extends State<GamePage> {
       //     setState(() {});
       //   } while (response == ChannelResponse.rateLimited && health <= 0);
       // },
-      // onGameStateUpdate: (Vector2 position, int health) async {
-      //   ChannelResponse response;
-      //   do {
-      //       response = await _gameChannel!.sendBroadcastMessage(
-      //           event: 'game_state',
-      //           payload: {'x': position.x / worldSize.x, 'y': position.y / worldSize.y, 'health': health},
-      //       );
-      //       await Future.delayed(Duration.zero);
-      //       setState(() {});
-      //   } while (response == ChannelResponse.rateLimited && health <= 0);
-      // },
-      onGameStateUpdate: (Vector2 position, int health) async {
+      onGameStateUpdate:
+          (Vector2 position, int health, Direction direction) async {
         ChannelResponse response;
         do {
           response = await _gameChannel!.sendBroadcastMessage(
             event: 'game_state',
-            payload: {'x': position.x / worldSize.x, 'y': position.y / worldSize.y, 'health': health},
+            payload: {
+              'x': position.x / worldSize.x,
+              'y': position.y / worldSize.y,
+              'health': health,
+              'direction': direction.index
+            },
           );
           await Future.delayed(Duration.zero);
           setState(() {});
@@ -117,46 +143,60 @@ class _GamePageState extends State<GamePage> {
         context: context,
         barrierDismissible: false,
         builder: (context) => _LobbyDialog(
-          onGameStarted: (gameId) async {
-            await Future.delayed(Duration.zero);
-            setState(() {});
-            _game.startNewGame();
-            _gameChannel = supabase.channel(gameId,
-                opts: const RealtimeChannelConfig(ack: true));
-            // _gameChannel!
-            //     .onBroadcast(
-            //       event: 'game_state',
-            //       callback: (payload, [_]) {
-            //         final position = Vector2(
-            //             payload['x'] as double, payload['y'] as double);
-            //         final opponentHealth = payload['health'] as int;
-            //         _game.updateOpponent(
-            //             position: position, health: opponentHealth);
-            //         if (opponentHealth <= 0 && !_game.isGameOver) {
-            //           _game.isGameOver = true;
-            //           _game.onGameOver(true);
-            //         }
-            //       },
-            //     )
-            //     .subscribe();
-            _gameChannel!.onBroadcast(
-              event: 'game_state',
-              callback: (payload, [_]) {
-                // final position = Vector2((payload['x'] as double) * worldSize.x, (payload['y'] as double) * worldSize.y);
-                final position = Vector2((payload['x'] as double), (payload['y'] as double));
-                final opponentHealth = payload['health'] as int;
-                _game.updateOpponent(
-                    position: position, health: opponentHealth);
-                if (opponentHealth <= 0 && !_game.isGameOver) {
-                  _game.isGameOver = true;
-                  _game.onGameOver(true);
-                }
+              onGameStarted: (gameId) async {
+                await Future.delayed(Duration.zero);
+                setState(() {});
+                _game.startNewGame();
+                _gameChannel = supabase.channel(gameId,
+                    opts: const RealtimeChannelConfig(ack: true));
+                // _gameChannel!
+                //     .onBroadcast(
+                //       event: 'game_state',
+                //       callback: (payload, [_]) {
+                //         final position = Vector2(
+                //             payload['x'] as double, payload['y'] as double);
+                //         final opponentHealth = payload['health'] as int;
+                //         _game.updateOpponent(
+                //             position: position, health: opponentHealth);
+                //         if (opponentHealth <= 0 && !_game.isGameOver) {
+                //           _game.isGameOver = true;
+                //           _game.onGameOver(true);
+                //         }
+                //       },
+                //     )
+                //     .subscribe();
+                _gameChannel!
+                    .onBroadcast(
+                      event: 'game_state',
+                      callback: (payload, [_]) {
+                        // final position = Vector2((payload['x'] as double) * worldSize.x, (payload['y'] as double) * worldSize.y);
+                        final position = Vector2(
+                            (payload['x'] as double), (payload['y'] as double));
+                        final opponentHealth = payload['health'] as int;
+                        final directionIndex = payload['direction'] as int;
+                        final direction = Direction.values[directionIndex];
+                        _game.updateOpponent(
+                          position: position,
+                          health: opponentHealth,
+                          direction: direction,
+                        );
+                        if (opponentHealth <= 0 && !_game.isGameOver) {
+                          _game.isGameOver = true;
+                          _game.onGameOver(true);
+                        }
+                      },
+                    )
+                    .subscribe();
               },
-            ).subscribe();
-          },
-        ));
+            ));
   }
+
+
+
 }
+
+
+
 
 class _LobbyDialog extends StatefulWidget {
   const _LobbyDialog({
@@ -185,29 +225,29 @@ class _LobbyDialogState extends State<_LobbyDialog> {
 
     _lobbyChannel
         .onPresenceSync((payload, [ref]) {
-      final presenceStates = _lobbyChannel.presenceState();
-      setState(() {
-        _userids = presenceStates
-            .map((presenceState) =>
-        presenceState.presences.first.payload['user_id'] as String)
-            .toList();
-      });
-    })
-        .onBroadcast(
-        event: 'game_start',
-        callback: (payload, [_]) {
-          final participantIds = List<String>.from(payload['participants']);
-          if (participantIds.contains(myUserId)) {
-            final gameId = payload['game_id'] as String;
-            widget.onGameStarted(gameId);
-            Navigator.of(context).pop();
-          }
+          final presenceStates = _lobbyChannel.presenceState();
+          setState(() {
+            _userids = presenceStates
+                .map((presenceState) =>
+                    presenceState.presences.first.payload['user_id'] as String)
+                .toList();
+          });
         })
+        .onBroadcast(
+            event: 'game_start',
+            callback: (payload, [_]) {
+              final participantIds = List<String>.from(payload['participants']);
+              if (participantIds.contains(myUserId)) {
+                final gameId = payload['game_id'] as String;
+                widget.onGameStarted(gameId);
+                Navigator.of(context).pop();
+              }
+            })
         .subscribe((status, _) async {
-      if (status == RealtimeSubscribeStatus.subscribed) {
-        await _lobbyChannel.track({'user_id': myUserId});
-      }
-    });
+          if (status == RealtimeSubscribeStatus.subscribed) {
+            await _lobbyChannel.track({'user_id': myUserId});
+          }
+        });
   }
 
   @override
@@ -222,30 +262,30 @@ class _LobbyDialogState extends State<_LobbyDialog> {
       title: const Text('Lobby'),
       content: _loading
           ? const SizedBox(
-        height: 100,
-        child: Center(child: CircularProgressIndicator()),
-      )
+              height: 100,
+              child: Center(child: CircularProgressIndicator()),
+            )
           : Text('${_userids.length} users waiting'),
       actions: [
         TextButton(
           onPressed: _userids.length < 2
               ? null
               : () async {
-            setState(() {
-              _loading = true;
-            });
+                  setState(() {
+                    _loading = true;
+                  });
 
-            final opponentId =
-            _userids.firstWhere((userId) => userId != myUserId);
-            final gameId = const Uuid().v4();
-            await _lobbyChannel.sendBroadcastMessage(
-              event: 'game_start',
-              payload: {
-                'participants': [opponentId, myUserId],
-                'game_id': gameId,
-              },
-            );
-          },
+                  final opponentId =
+                      _userids.firstWhere((userId) => userId != myUserId);
+                  final gameId = const Uuid().v4();
+                  await _lobbyChannel.sendBroadcastMessage(
+                    event: 'game_start',
+                    payload: {
+                      'participants': [opponentId, myUserId],
+                      'game_id': gameId,
+                    },
+                  );
+                },
           child: const Text('Start Game'),
         ),
       ],

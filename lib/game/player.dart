@@ -13,20 +13,18 @@ import 'package:flame/sprite.dart';
 import 'package:flame_realtime_shooting/game/bullet.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
 
-import '../components/pattern.dart';
-
 
 class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
   late final Vector2 initialPosition;
   Timer? moveTimer;
-  bool _isMyPlayer;
-  bool _isInCooldown = false;
-  DateTime _lastHitTime = DateTime.now();
-  static const int cooldownPeriod = 2000; // cooldown period in milliseconds
-  static const radius = 20.0;
-
   Player({required bool isMe}) : _isMyPlayer = isMe;
+  final bool _isMyPlayer;
+  static const radius = 40.0;
+
+  Map<Direction, Sprite> directionSprites = {};
+  Direction currentDirection = Direction.up;
+  late SpriteComponent tankSprite;
 
   @override
   Future<void>? onLoad() async {
@@ -35,19 +33,44 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     height = radius * 2;
 
     final initialX = gameRef.size.x / 2;
+    final initialY = gameRef.size.y / 2;
+
     initialPosition = _isMyPlayer
-        ? Vector2(initialX, gameRef.size.y * 0.8)
-        : Vector2(initialX, gameRef.size.y * 0.2);
+        ? Vector2(initialX, initialY + radius)
+        : Vector2(initialX, initialY - radius);
     position = initialPosition;
 
+    directionSprites = {
+      Direction.up: Sprite(await gameRef.images.load('tank-1-0.png')),
+      Direction.upRight: Sprite(await gameRef.images.load('tank-1-1.png')),
+      Direction.right: Sprite(await gameRef.images.load('tank-1-2.png')),
+      Direction.downRight: Sprite(await gameRef.images.load('tank-1-3.png')),
+      Direction.down: Sprite(await gameRef.images.load('tank-1-4.png')),
+      Direction.downLeft: Sprite(await gameRef.images.load('tank-1-5.png')),
+      Direction.left: Sprite(await gameRef.images.load('tank-1-6.png')),
+      Direction.upLeft: Sprite(await gameRef.images.load('tank-1-7.png')),
+    };
+    currentDirection = Direction.up;
+    tankSprite = SpriteComponent(
+      sprite: directionSprites[currentDirection],
+      size: Vector2.all(radius * 2),
+    );
+
+    add(tankSprite);
     add(CircleHitbox());
     add(_Gauge());
     await super.onLoad();
   }
+
   void move(Vector2 delta) {
     Vector2 newPosition = position + delta;
     newPosition.clamp(Vector2(radius, radius), gameRef.size - Vector2(radius, radius));
     position = newPosition;
+  }
+
+  void updateDirection(Direction newDirection) {
+    currentDirection = newDirection;
+    tankSprite.sprite = directionSprites[currentDirection];
   }
 
   void updateHealth(double healthLeft) {
@@ -62,10 +85,6 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
     if (other is Bullet && _isMyPlayer != other.isMine) {
-      other.hasBeenHit = true;
-      other.removeFromParent();
-    }
-    if (other is BombZone && !other.hasBeenHit) {
       other.hasBeenHit = true;
       other.removeFromParent();
     }
@@ -107,24 +126,5 @@ class _Gauge extends PositionComponent {
               : _healthLeft > 0.25
               ? Colors.orange
               : Colors.red);
-
-    // 체력 값을 화면에 표시 (디버깅용)
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: 'Health: ${_healthLeft.toStringAsFixed(2)}',
-        style: TextStyle(color: Colors.white),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-
-    textPainter.layout(
-      minWidth: 0,
-      maxWidth: width,
-    );
-
-    textPainter.paint(canvas, Offset(0, -20)); // 체력바 위에 체력 값을 그립니다.
   }
 }
-
-
-
