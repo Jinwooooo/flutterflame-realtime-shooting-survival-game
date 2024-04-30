@@ -14,7 +14,7 @@ import 'package:flame_realtime_shooting/game/bullet.dart';
 import 'package:flame_realtime_shooting/game/player.dart';
 import 'package:flame_realtime_shooting/components/time.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
-import 'package:flame_realtime_shooting/components/pattern.dart';
+import 'package:flame_realtime_shooting/components/pattern_1.dart';
 
 late Vector2 worldSize;
 
@@ -27,7 +27,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
   int _playerHealthPoint = _initialHealthPoints;
   bool isGameOver = true;
   Direction _currentJoypadDirection = Direction.none;
-  late final Pattern _pattern;
+  late final Pattern1 _pattern1;
 
   final void Function(bool didWin) onGameOver;
   final void Function(Vector2 position, int health, Direction direction) onGameStateUpdate;
@@ -75,19 +75,19 @@ class MyGame extends FlameGame with HasCollisionDetection {
   void handleTimeTick(int elapsedSeconds) {
     _timerText.text = _gameTimer.formattedTime;
     if (elapsedSeconds == 2) {
-      _pattern = Pattern(patternsData: [
-                  PatternData(0, 500, 1),
-                  PatternData(500, 1000, 2),
-                  PatternData(1000, 1500, 3),
-                  PatternData(1500, 2000, 4),
+      _pattern1 = Pattern1(patternsData: [
+                  PatternData1(0, 500, 1),
+                  PatternData1(500, 1000, 2),
+                  PatternData1(1000, 1500, 3),
+                  PatternData1(1500, 2000, 4),
+                  PatternData1(2000, 2500, 5),
                 ]);
-      _pattern.elapsedMilliseconds = 0;
-      _pattern.priority = 2;
-      _pattern.debugMode = true;
-      add(_pattern);
-    } else if (elapsedSeconds == 4) {
-      remove(_pattern);
-      print('end');
+      _pattern1.elapsedMilliseconds = 0;
+      _pattern1.priority = 2;
+      _pattern1.debugMode = true;
+      add(_pattern1);
+    } else if (elapsedSeconds == 5) {
+      remove(_pattern1);
     }
   }
 

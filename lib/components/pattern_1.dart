@@ -10,18 +10,16 @@ import 'package:flame/components.dart';
 
 // self imports
 import 'package:flame_realtime_shooting/game/game.dart';
-\
 
-class Pattern extends PositionComponent {
-  final List<PatternData> patternsData;
+
+class Pattern1 extends PositionComponent {
+  final List<PatternData1> patternsData;
   ui.Image? warningIconImage;
   double elapsedMilliseconds = 0;
 
-  Pattern({
+  Pattern1({
     required this.patternsData,
-  }) {
-    patternsData.sort((a, b) => a.startTime.compareTo(b.startTime));
-  }
+  });
 
   @override
   Future<void> onLoad() async {
@@ -66,7 +64,7 @@ class Pattern extends PositionComponent {
     }
   }
 
-  void _renderWarning(Canvas canvas, PatternData pattern) {
+  void _renderWarning(Canvas canvas, PatternData1 pattern) {
     final paint = Paint()
       ..color = Colors.red.withOpacity(0.5)
       ..style = PaintingStyle.fill;
@@ -76,26 +74,41 @@ class Pattern extends PositionComponent {
     final startX = worldSize.x * (pattern.quadrant - 1) / 4;
     final startY = 0.0;
 
-    canvas.drawRect(Rect.fromLTWH(startX, startY, rectWidth, rectHeight), paint);
+    if (pattern.quadrant == 5) {
+      canvas.drawRect(Rect.fromLTWH(worldSize.x / 4, 0.0, worldSize.x, worldSize.y), paint);
 
-    if (warningIconImage != null) {
-      final iconX = startX + (rectWidth - warningIconImage!.width) / 2;
-      final iconY = startY + (rectHeight - warningIconImage!.height) / 2;
-      paintImage(
-        canvas: canvas,
-        image: warningIconImage!,
-        rect: Rect.fromLTWH(iconX, iconY, warningIconImage!.width.toDouble(), warningIconImage!.height.toDouble()),
-        fit: BoxFit.scaleDown,
-      );
+      if (warningIconImage != null) {
+        final iconX = ((worldSize.x * 5) / 8) - (warningIconImage!.width) / 2;
+        final iconY = (worldSize.y - warningIconImage!.height) / 2;
+        paintImage(
+          canvas: canvas,
+          image: warningIconImage!,
+          rect: Rect.fromLTWH(iconX, iconY, warningIconImage!.width.toDouble(), warningIconImage!.height.toDouble()),
+          fit: BoxFit.scaleDown,
+        );
+      }
+    } else {
+      canvas.drawRect(Rect.fromLTWH(startX, startY, rectWidth, rectHeight), paint);
+
+      if (warningIconImage != null) {
+        final iconX = startX + (rectWidth - warningIconImage!.width) / 2;
+        final iconY = startY + (rectHeight - warningIconImage!.height) / 2;
+        paintImage(
+          canvas: canvas,
+          image: warningIconImage!,
+          rect: Rect.fromLTWH(iconX, iconY, warningIconImage!.width.toDouble(), warningIconImage!.height.toDouble()),
+          fit: BoxFit.scaleDown,
+        );
+      }
     }
   }
 }
 
-class PatternData {
+class PatternData1 {
   final double startTime;
   final double endTime;
   final int quadrant;
 
-  PatternData(this.startTime, this.endTime, this.quadrant);
+  PatternData1(this.startTime, this.endTime, this.quadrant);
 }
 
