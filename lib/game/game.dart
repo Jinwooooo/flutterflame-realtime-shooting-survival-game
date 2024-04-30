@@ -72,6 +72,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
     int patternIndex = random.nextInt(bombZonePatterns.length);  // 전체 게임에 동일한 인덱스 사용
     List<Vector2> selectedPattern = bombZonePatterns[patternIndex];
 
+
     for (Vector2 position in selectedPattern) {
       final bombZone = BombZone()
         ..position = Vector2(
