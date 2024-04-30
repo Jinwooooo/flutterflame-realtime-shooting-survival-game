@@ -1,5 +1,4 @@
 // dart imports
-import 'dart:async' as async;
 import 'dart:ui' as ui;
 
 // flutter imports
@@ -66,7 +65,7 @@ class Pattern1 extends PositionComponent {
 
   void _renderWarning(Canvas canvas, PatternData1 pattern) {
     final paint = Paint()
-      ..color = Colors.red.withOpacity(0.5)
+      ..color = Colors.red.withOpacity(0.4)
       ..style = PaintingStyle.fill;
 
     final rectWidth = worldSize.x / 4;

@@ -12,6 +12,7 @@ import 'package:flame/sprite.dart';
 // self imports
 import 'package:flame_realtime_shooting/game/bullet.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
+import 'package:flame_realtime_shooting/components/raid_1.dart';
 
 
 class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
@@ -21,6 +22,7 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Player({required bool isMe}) : _isMyPlayer = isMe;
   final bool _isMyPlayer;
   static const radius = 40.0;
+  bool hasBeenHit = false;
 
   Map<Direction, Sprite> directionSprites = {};
   Direction currentDirection = Direction.up;

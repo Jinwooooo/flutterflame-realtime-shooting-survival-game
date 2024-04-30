@@ -19,51 +19,75 @@ class JoypadState extends State<Joypad> {
   Direction direction = Direction.none;
   Offset delta = Offset.zero;
   bool isPressed = false;
+  bool isJoypadEnabled = true;
   Timer? movementTimer;
 
   @override
   Widget build(BuildContext context) {
     return Opacity(
       opacity: 0.6,
-      child: Container(
-        height: 120,
-        width: 120,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.grey[800],
-          border: Border.all(color: Colors.white, width: 2),
-        ),
-        child: GestureDetector(
-          onPanStart: _handlePanStart,
-          onPanUpdate: _handlePanUpdate,
-          onPanEnd: _handlePanEnd,
-          child: Center(
-            child: Transform.translate(
-              offset: delta,
-              child: CircleAvatar(
-                backgroundColor: Colors.grey[300],
-                radius: 30,
+      child: Stack(
+        children: [
+          Container(
+            height: 120,
+            width: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.grey[800],
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: GestureDetector(
+              onPanStart: _handlePanStart,
+              onPanUpdate: _handlePanUpdate,
+              onPanEnd: _handlePanEnd,
+              child: Center(
+                child: Transform.translate(
+                  offset: delta,
+                  child: CircleAvatar(
+                    backgroundColor: Colors.grey[300],
+                    radius: 30,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+          Positioned(
+            top: 80,
+            right: 60,
+            child: ElevatedButton(
+              onPressed: () {
+                if (isJoypadEnabled) {
+                  toggleJoypadEnabled();
+                  Timer(const Duration(seconds: 2), () {
+                    toggleJoypadEnabled();
+                  });
+                }
+              },
+              child: const Text(''),
+            ),
+          ),
+        ],
       ),
     );
   }
 
+
   void _handlePanStart(DragStartDetails details) {
+    if (!isJoypadEnabled) return;
     isPressed = true;
     _updateMovement(details.localPosition);
     _startMovementTimer();
   }
 
   void _handlePanUpdate(DragUpdateDetails details) {
+    if (!isJoypadEnabled) return;
     if (isPressed) {
       _updateMovement(details.localPosition);
     }
   }
 
   void _handlePanEnd(DragEndDetails details) {
+    if (!isJoypadEnabled) return;
     isPressed = false;
     updateDelta(Offset.zero);
     _stopMovementTimer();
@@ -120,5 +144,11 @@ class JoypadState extends State<Joypad> {
 
   void _stopMovementTimer() {
     movementTimer?.cancel();
+  }
+
+  void toggleJoypadEnabled() {
+    setState(() {
+      isJoypadEnabled = !isJoypadEnabled;
+    });
   }
 }

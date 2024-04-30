@@ -18,7 +18,7 @@
 		</data>
 		<key>Assets.car</key>
 		<data>
-		0nXjhvDB/xI3ZDZy+QeUbDkJ8vc=
+		nUjZMazen0qAgDl4SLkzrRyN0Wc=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<data>
@@ -46,7 +46,7 @@
 		</data>
 		<key>Frameworks/App.framework/App</key>
 		<data>
-		w8Qc5kUb9Ozqln8G5DGhmyEkhKI=
+		hnWrnALf+egisDNjr/xAo8RYdWA=
 		</data>
 		<key>Frameworks/App.framework/Info.plist</key>
 		<data>
@@ -54,15 +54,15 @@
 		</data>
 		<key>Frameworks/App.framework/_CodeSignature/CodeResources</key>
 		<data>
-		TxDGG9DKsqd+Lv2+O2Uz+fDgkt0=
+		Aq9upD3C7iiIuCkHRiLWyMg2fmo=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.bin</key>
 		<data>
-		mYAdLMqgpq3dW/A0/zNkk5zJqoE=
+		9c3rdFr14bojZfbAlwfYLL6r6EQ=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.json</key>
 		<data>
-		+zlbS5ey1gZ6WSuz87EzKzE2tZU=
+		9NODaQxXvCbyP5zKB4k2j7fj86o=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/FontManifest.json</key>
 		<data>
@@ -79,6 +79,14 @@
 		<key>Frameworks/App.framework/flutter_assets/assets/images/brown-background.avif</key>
 		<data>
 		IkgagSv5VjD2RXWvmpaqsgou9b8=
+		</data>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/explosion-black.gif</key>
+		<data>
+		uxH4wYVS9URBpb7krjyecBm1Mnk=
+		</data>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/explosion-transparent.gif</key>
+		<data>
+		yz1MLeq8QAu8K83W/KpnKUY0YgQ=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/assets/images/opponent-bg.png</key>
 		<data>
@@ -146,7 +154,7 @@
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/kernel_blob.bin</key>
 		<data>
-		b3ttqFZ0wUXw+XDLzjeYvko3h6k=
+		Pj4YZxcewJiqydy02rVgKzl1++Y=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/shaders/ink_sparkle.frag</key>
 		<data>
@@ -360,7 +368,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			tI5MEzXfAKJ/3ccjFG4ll5OyQ6v74Ny3q8iqg4amgbo=
+			8sVTeuD8H/8b/wCHL/7BYuWdJPyT2Ps7gQX/oBLG+Eg=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
@@ -409,7 +417,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			fR4d4K5ILCa7Mpc6+j3ruT2L1GKNQaICpJ5IHxI+5QY=
+			Dwq2gdra/THDdwh4rflXjXDBXiCIDxoYmoXQwMV/UzE=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/Info.plist</key>
@@ -423,21 +431,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			5byfyVmJj08OvpZOWDDugAlcOSYTiTlN+H0l1hKLJK4=
+			FqgMpJFrXbXW8KlumZaMLhC667UyRPv3CFw+Q50cIiQ=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.bin</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			o4t9AXIFWJtciwbWkTMWanvkqPtyh3NzrPBgFbnVprA=
+			QdoUHqg08+FqiHfyVGR/NmW6JPSdGHZ4xTJtg/Fp+5w=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			Zu3iyNFyx8LCo0cCDoqXgzw54jjmSqtP6YzbMXEbQY8=
+			IBpzu+Nrd+7Z++IYlpOlgMw42/VhhV8k3O8EBHGlza0=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/FontManifest.json</key>
@@ -466,6 +474,20 @@
 			<key>hash2</key>
 			<data>
 			W9/2iXld6zj2dpOLvPQhPuKCqItGE8dyKqDoNjP7hSY=
+			</data>
+		</dict>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/explosion-black.gif</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			12Vy6KtunfNyzEKnnbW7SFUNND1vD73Th1Xpm86UWow=
+			</data>
+		</dict>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/explosion-transparent.gif</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			yWwwU27WBh6OPxoFHgeoV5SG8nHyoFI3dsN6+Yroip0=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/assets/images/opponent-bg.png</key>
@@ -584,7 +606,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			u/jX+mIY7hq9s9Gb/oQRWllpaZJ8rEkeAf9V8QURIew=
+			XNaFTiG8Ti7jyZWjTVer6B1/ooh3cln3Jfofpqd/GYI=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/shaders/ink_sparkle.frag</key>

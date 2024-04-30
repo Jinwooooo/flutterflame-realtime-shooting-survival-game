@@ -15,6 +15,7 @@ import 'package:flame_realtime_shooting/game/player.dart';
 import 'package:flame_realtime_shooting/components/time.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
 import 'package:flame_realtime_shooting/components/pattern_1.dart';
+import 'package:flame_realtime_shooting/components/raid_1.dart';
 
 late Vector2 worldSize;
 
@@ -28,6 +29,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
   bool isGameOver = true;
   Direction _currentJoypadDirection = Direction.none;
   late final Pattern1 _pattern1;
+  late final Raid1 _raid1;
 
   final void Function(bool didWin) onGameOver;
   final void Function(Vector2 position, int health, Direction direction) onGameStateUpdate;
@@ -86,8 +88,25 @@ class MyGame extends FlameGame with HasCollisionDetection {
       _pattern1.priority = 2;
       _pattern1.debugMode = true;
       add(_pattern1);
-    } else if (elapsedSeconds == 5) {
+    } 
+    if (elapsedSeconds == 5) {
       remove(_pattern1);
+    }
+
+    if (elapsedSeconds == 5) {
+      _raid1 = Raid1(raidsData: [
+                RaidData1(0, 700, 1),
+                RaidData1(700, 1400, 2),
+                RaidData1(1400, 2100, 3),
+                RaidData1(2100, 2800, 4),
+                RaidData1(2800, 3500, 5),
+      ]);
+      _raid1.priority = 2;
+      _raid1.debugMode = true;
+      add(_raid1);
+    } 
+    if (elapsedSeconds == 10) {
+      remove(_raid1);
     }
   }
 
@@ -129,8 +148,6 @@ class MyGame extends FlameGame with HasCollisionDetection {
     for (final child in children) {
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
         _playerHealthPoint = _playerHealthPoint - child.damage;
-        // final mirroredPosition = _player.getMirroredPercentPosition();
-        // onGameStateUpdate(mirroredPosition, _playerHealthPoint);
         onGameStateUpdate(_player.position, _playerHealthPoint, _player.currentDirection);
         _player.updateHealth(_playerHealthPoint / _initialHealthPoints);
       }
