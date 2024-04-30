@@ -1,9 +1,20 @@
+// dart imports
 import 'dart:async';
 
+// flutter imports
+import 'package:flutter/material.dart';
+
+// flame imports
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/sprite.dart';
+
+// self imports
 import 'package:flame_realtime_shooting/game/bullet.dart';
-import 'package:flutter/material.dart';
+import 'package:flame_realtime_shooting/components/joypad.dart';
+
+import '../components/pattern.dart';
+
 
 class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
@@ -35,7 +46,6 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     position = newPosition;
   }
 
-
   void updateHealth(double healthLeft) {
     for (final child in children) {
       if (child is _Gauge) {
@@ -51,12 +61,10 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
       other.hasBeenHit = true;
       other.removeFromParent();
     }
-  }
-
-  Vector2 getMirroredPercentPosition() {
-    final mirroredPosition = gameRef.size - position;
-    return Vector2(mirroredPosition.x / gameRef.size.x,
-        mirroredPosition.y / gameRef.size.y);
+    if (other is BombZone && !other.hasBeenHit) {
+      other.hasBeenHit = true;
+      other.removeFromParent();
+    }
   }
 }
 
@@ -96,5 +104,4 @@ class _Gauge extends PositionComponent {
               ? Colors.orange
               : Colors.red);
   }
-
 }

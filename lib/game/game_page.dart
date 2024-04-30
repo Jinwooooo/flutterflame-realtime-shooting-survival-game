@@ -9,9 +9,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-import '../components/joypad.dart';
-import '../main.dart';
-import 'game.dart';
+// self imports
+import 'package:flame_realtime_shooting/main.dart';
+import 'package:flame_realtime_shooting/game/game.dart';
+import 'package:flame_realtime_shooting/components/joypad.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key});
@@ -52,12 +53,34 @@ class _GamePageState extends State<GamePage> {
 
   Future<void> _initialize() async {
     _game = MyGame(
-      onGameStateUpdate: (position, health) async {
+      // onGameStateUpdate: (position, health) async {
+      //   ChannelResponse response;
+      //   do {
+      //     response = await _gameChannel!.sendBroadcastMessage(
+      //       event: 'game_state',
+      //       payload: {'x': position.x, 'y': position.y, 'health': health},
+      //     );
+      //     await Future.delayed(Duration.zero);
+      //     setState(() {});
+      //   } while (response == ChannelResponse.rateLimited && health <= 0);
+      // },
+      // onGameStateUpdate: (Vector2 position, int health) async {
+      //   ChannelResponse response;
+      //   do {
+      //       response = await _gameChannel!.sendBroadcastMessage(
+      //           event: 'game_state',
+      //           payload: {'x': position.x / worldSize.x, 'y': position.y / worldSize.y, 'health': health},
+      //       );
+      //       await Future.delayed(Duration.zero);
+      //       setState(() {});
+      //   } while (response == ChannelResponse.rateLimited && health <= 0);
+      // },
+      onGameStateUpdate: (Vector2 position, int health) async {
         ChannelResponse response;
         do {
           response = await _gameChannel!.sendBroadcastMessage(
             event: 'game_state',
-            payload: {'x': position.x, 'y': position.y, 'health': health},
+            payload: {'x': position.x / worldSize.x, 'y': position.y / worldSize.y, 'health': health},
           );
           await Future.delayed(Duration.zero);
           setState(() {});
@@ -100,12 +123,27 @@ class _GamePageState extends State<GamePage> {
             _game.startNewGame();
             _gameChannel = supabase.channel(gameId,
                 opts: const RealtimeChannelConfig(ack: true));
-            _gameChannel!
-                .onBroadcast(
+            // _gameChannel!
+            //     .onBroadcast(
+            //       event: 'game_state',
+            //       callback: (payload, [_]) {
+            //         final position = Vector2(
+            //             payload['x'] as double, payload['y'] as double);
+            //         final opponentHealth = payload['health'] as int;
+            //         _game.updateOpponent(
+            //             position: position, health: opponentHealth);
+            //         if (opponentHealth <= 0 && !_game.isGameOver) {
+            //           _game.isGameOver = true;
+            //           _game.onGameOver(true);
+            //         }
+            //       },
+            //     )
+            //     .subscribe();
+            _gameChannel!.onBroadcast(
               event: 'game_state',
               callback: (payload, [_]) {
-                final position = Vector2(
-                    payload['x'] as double, payload['y'] as double);
+                // final position = Vector2((payload['x'] as double) * worldSize.x, (payload['y'] as double) * worldSize.y);
+                final position = Vector2((payload['x'] as double), (payload['y'] as double));
                 final opponentHealth = payload['health'] as int;
                 _game.updateOpponent(
                     position: position, health: opponentHealth);
@@ -114,8 +152,7 @@ class _GamePageState extends State<GamePage> {
                   _game.onGameOver(true);
                 }
               },
-            )
-                .subscribe();
+            ).subscribe();
           },
         ));
   }
