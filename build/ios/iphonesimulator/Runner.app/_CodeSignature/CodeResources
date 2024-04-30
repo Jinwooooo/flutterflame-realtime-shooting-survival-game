@@ -46,7 +46,7 @@
 		</data>
 		<key>Frameworks/App.framework/App</key>
 		<data>
-		G114y9bajvynHzLJTFSa2fzYyrA=
+		smm4mrCcT6500NbfN0HvHtbkDpc=
 		</data>
 		<key>Frameworks/App.framework/Info.plist</key>
 		<data>
@@ -54,15 +54,15 @@
 		</data>
 		<key>Frameworks/App.framework/_CodeSignature/CodeResources</key>
 		<data>
-		+bhHXPpinh8rOXWj/I60FYA13mo=
+		ONKlb9Sil618/hQHByOS7GDoPMU=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.bin</key>
 		<data>
-		iWAs8FViDaesbdsz8vS/blQeZho=
+		mYAdLMqgpq3dW/A0/zNkk5zJqoE=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.json</key>
 		<data>
-		scHfhQwCif1/u9Bg5KzWRJmbuV8=
+		+zlbS5ey1gZ6WSuz87EzKzE2tZU=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/FontManifest.json</key>
 		<data>
@@ -80,9 +80,9 @@
 		<data>
 		IkgagSv5VjD2RXWvmpaqsgou9b8=
 		</data>
-		<key>Frameworks/App.framework/flutter_assets/assets/images/demo-map.png</key>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/opponent-bg.png</key>
 		<data>
-		7tL8M0EYjrwRIKua9MemE8sn5/k=
+		mKzbejUOmtYzFtrVeVmmDrOi50Q=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/assets/images/opponent-bullet.png</key>
 		<data>
@@ -91,6 +91,10 @@
 		<key>Frameworks/App.framework/flutter_assets/assets/images/opponent.png</key>
 		<data>
 		V6ABVOT0TZBOB764SufNtl1EGFA=
+		</data>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/player-bg.png</key>
+		<data>
+		38zKgojviYiQf5PS9xmdnwrOwGs=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/assets/images/player-bullet.png</key>
 		<data>
@@ -142,7 +146,7 @@
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/kernel_blob.bin</key>
 		<data>
-		6fhfypT51ewUU4TAGxxEoeJB7VA=
+		MFrSo0pnWCA/JAQG9aEVZP4c68w=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/shaders/ink_sparkle.frag</key>
 		<data>
@@ -405,7 +409,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			7nYB7Y/XFnnJtGkdRZMjHZPqWXfQkruFbnyE1mxgdEU=
+			D5VysMJfqNPdv9G2X8sXbBCC9IvEAI6q6pfte83lvMc=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/Info.plist</key>
@@ -419,21 +423,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			OOk1qAayAPO7AF9UQhTMaJJgYdV5fGy9WB0rsTWbnzg=
+			U0ydjqUKVbQGEnYYnrTS7wloOBYMgvMxhUGyZ9RTtm0=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.bin</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			6/0xEBl5AZaEXAtS/ZXmduiySAqdSiu2jeBERRhWbNA=
+			o4t9AXIFWJtciwbWkTMWanvkqPtyh3NzrPBgFbnVprA=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			/z7NRWVpIWagzmulRRhxPlodFhsivm4u2/GtWKpLgAI=
+			Zu3iyNFyx8LCo0cCDoqXgzw54jjmSqtP6YzbMXEbQY8=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/FontManifest.json</key>
@@ -464,11 +468,11 @@
 			W9/2iXld6zj2dpOLvPQhPuKCqItGE8dyKqDoNjP7hSY=
 			</data>
 		</dict>
-		<key>Frameworks/App.framework/flutter_assets/assets/images/demo-map.png</key>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/opponent-bg.png</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			2eSRR0PY9/dGD7qY3lzS6XyxxqM8XK/+Q2K7xc63Yn8=
+			/bBfQ/oLvKbiDzXuEYDm4DztR2iyhr65q4SjwhVmNCg=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/assets/images/opponent-bullet.png</key>
@@ -483,6 +487,13 @@
 			<key>hash2</key>
 			<data>
 			p+OaeLmPvIuXnEmGrRqBAS/y0YnF1Acu7SJ40OgqxUE=
+			</data>
+		</dict>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/player-bg.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			RUAgkk/J8AIDYKUeLxly3VPpm+YDP7QxzSQ20ImAJTU=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/assets/images/player-bullet.png</key>
@@ -573,7 +584,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			q63iV8N2FBBU1ikeQJwYFGB3idPiw4koqpjzvO+XQ0E=
+			t70aUpyJPEPCM0xUH9FCqTWvOeg6MK8OWGb5xR/f/Bg=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/shaders/ink_sparkle.frag</key>
