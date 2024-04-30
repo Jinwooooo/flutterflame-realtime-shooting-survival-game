@@ -154,7 +154,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
       }
     }
 
-    _shootBullets();
+    shootBullets();
   }
 
   // 총알 속도 및 방향 계산 함수
@@ -182,8 +182,9 @@ class MyGame extends FlameGame with HasCollisionDetection {
     }
   }
 
-  Future<void> _shootBullets() async {
+  Future<void> shootBullets() async {
     await Future.delayed(const Duration(milliseconds: 500));  // 필요한 경우 대기
+
 
 // 플레이어 총알 발사
     Vector2 playerBulletVelocity = getBulletVelocity(_player.currentDirection);
@@ -209,7 +210,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
       initialPosition: opponentBulletInitialPosition,
     ));
 
-    _shootBullets();  // 지속적인 발사를 위한 재귀 호출
+    shootBullets();  // 지속적인 발사를 위한 재귀 호출
   }
 
   void updateOpponent({required Vector2 position, required int health, required Direction direction}) {

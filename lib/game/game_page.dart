@@ -47,33 +47,17 @@ class _GamePageState extends State<GamePage> {
             right: 20,
             bottom: 10,
             child: FireButton(
-              // onFirePressed: _fire,
-              // children: [
-              //   FireButton(
-              //     onFirePressed: () {
-              //       // 총을 쏘는 기능 구현 예정
-              //     },
-              //   ),
-              //   SizedBox(height: 10), // 버튼 사이의 간격
-                // ItemButton(
-                //   onFirePressed: () {
-                //     // 아이템 사용 기능 구현 예정
-                //   },
-                // ),
-              // ],
+              // onFirePressed: () {
+              //   _game.shootBullets();
+              //   Future.delayed(const Duration(milliseconds: 500), () {
+              //   });
+              // },
             ),
           ),
         ],
       ),
     );
   }
-
-
-  // void _fire() {
-  //   if (_game != null) {
-  //     _game.fireBullets(5);
-  //   }
-  // }
 
 
   @override
@@ -84,17 +68,6 @@ class _GamePageState extends State<GamePage> {
 
   Future<void> _initialize() async {
     _game = MyGame(
-      // onGameStateUpdate: (position, health) async {
-      //   ChannelResponse response;
-      //   do {
-      //     response = await _gameChannel!.sendBroadcastMessage(
-      //       event: 'game_state',
-      //       payload: {'x': position.x, 'y': position.y, 'health': health},
-      //     );
-      //     await Future.delayed(Duration.zero);
-      //     setState(() {});
-      //   } while (response == ChannelResponse.rateLimited && health <= 0);
-      // },
       onGameStateUpdate:
           (Vector2 position, int health, Direction direction) async {
         ChannelResponse response;
@@ -149,22 +122,7 @@ class _GamePageState extends State<GamePage> {
                 _game.startNewGame();
                 _gameChannel = supabase.channel(gameId,
                     opts: const RealtimeChannelConfig(ack: true));
-                // _gameChannel!
-                //     .onBroadcast(
-                //       event: 'game_state',
-                //       callback: (payload, [_]) {
-                //         final position = Vector2(
-                //             payload['x'] as double, payload['y'] as double);
-                //         final opponentHealth = payload['health'] as int;
-                //         _game.updateOpponent(
-                //             position: position, health: opponentHealth);
-                //         if (opponentHealth <= 0 && !_game.isGameOver) {
-                //           _game.isGameOver = true;
-                //           _game.onGameOver(true);
-                //         }
-                //       },
-                //     )
-                //     .subscribe();
+
                 _gameChannel!
                     .onBroadcast(
                       event: 'game_state',
