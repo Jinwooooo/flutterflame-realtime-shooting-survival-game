@@ -18,7 +18,7 @@
 		</data>
 		<key>Assets.car</key>
 		<data>
-		nUjZMazen0qAgDl4SLkzrRyN0Wc=
+		0nXjhvDB/xI3ZDZy+QeUbDkJ8vc=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<data>
@@ -46,7 +46,7 @@
 		</data>
 		<key>Frameworks/App.framework/App</key>
 		<data>
-		hnWrnALf+egisDNjr/xAo8RYdWA=
+		21NUzGOR26NNOMhiYgsjPt3SOcY=
 		</data>
 		<key>Frameworks/App.framework/Info.plist</key>
 		<data>
@@ -54,15 +54,15 @@
 		</data>
 		<key>Frameworks/App.framework/_CodeSignature/CodeResources</key>
 		<data>
-		Aq9upD3C7iiIuCkHRiLWyMg2fmo=
+		/5Qk2x5XwKTfSBcGFVwj0MK1Ovk=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.bin</key>
 		<data>
-		9c3rdFr14bojZfbAlwfYLL6r6EQ=
+		zqC7lyLF4ezDAGCS1u+IOCQnq5k=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.json</key>
 		<data>
-		9NODaQxXvCbyP5zKB4k2j7fj86o=
+		Jdug4EJJSLUD/r8jhtC6+cfYb/Y=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/FontManifest.json</key>
 		<data>
@@ -84,9 +84,13 @@
 		<data>
 		uxH4wYVS9URBpb7krjyecBm1Mnk=
 		</data>
-		<key>Frameworks/App.framework/flutter_assets/assets/images/explosion-transparent.gif</key>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/explosion-sprite.png</key>
 		<data>
-		yz1MLeq8QAu8K83W/KpnKUY0YgQ=
+		nFwIgbb8UpTSnOrVlBBTQktzO84=
+		</data>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/explosion-transparent.png</key>
+		<data>
+		pTvUFzM3Phwk2/QZKBAjIwk7Bho=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/assets/images/opponent-bg.png</key>
 		<data>
@@ -154,7 +158,7 @@
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/kernel_blob.bin</key>
 		<data>
-		Pj4YZxcewJiqydy02rVgKzl1++Y=
+		zXBrmYirmk+hTPJ9r0MDatZmoIo=
 		</data>
 		<key>Frameworks/App.framework/flutter_assets/shaders/ink_sparkle.frag</key>
 		<data>
@@ -368,7 +372,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			8sVTeuD8H/8b/wCHL/7BYuWdJPyT2Ps7gQX/oBLG+Eg=
+			tI5MEzXfAKJ/3ccjFG4ll5OyQ6v74Ny3q8iqg4amgbo=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
@@ -417,7 +421,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Dwq2gdra/THDdwh4rflXjXDBXiCIDxoYmoXQwMV/UzE=
+			Ft9IzajFfs9HE5EtgXKIlnH2V1hICET9AC4zPBY9HAs=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/Info.plist</key>
@@ -431,21 +435,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			FqgMpJFrXbXW8KlumZaMLhC667UyRPv3CFw+Q50cIiQ=
+			THS/pgSi1PlDZ2DxwxTVU1+j8hbV44Hb04TDLP9sT4I=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.bin</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			QdoUHqg08+FqiHfyVGR/NmW6JPSdGHZ4xTJtg/Fp+5w=
+			5KKMNpAF9FWE9m0+tse1WhqY9ZK6Dg7k3aa6ljII3yE=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/AssetManifest.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			IBpzu+Nrd+7Z++IYlpOlgMw42/VhhV8k3O8EBHGlza0=
+			lArP6Se+5F7HRnZKF2ydRZ9A1UEFRXmDNW9SNgcX8fU=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/FontManifest.json</key>
@@ -483,11 +487,18 @@
 			12Vy6KtunfNyzEKnnbW7SFUNND1vD73Th1Xpm86UWow=
 			</data>
 		</dict>
-		<key>Frameworks/App.framework/flutter_assets/assets/images/explosion-transparent.gif</key>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/explosion-sprite.png</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			yWwwU27WBh6OPxoFHgeoV5SG8nHyoFI3dsN6+Yroip0=
+			2zs/IrgWmL5AiHIt/EatfVn1Z5jztZ1XJHf3mNFraw4=
+			</data>
+		</dict>
+		<key>Frameworks/App.framework/flutter_assets/assets/images/explosion-transparent.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			GKSEW5yIFZ2fJ/McXsqzHgBPyhjlozlsjb8JEtCDZIA=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/assets/images/opponent-bg.png</key>
@@ -606,7 +617,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			XNaFTiG8Ti7jyZWjTVer6B1/ooh3cln3Jfofpqd/GYI=
+			GK1Ez1tADm6Pwar+K2s9LNPl5HIdQ+HMdfYYcv3QyV8=
 			</data>
 		</dict>
 		<key>Frameworks/App.framework/flutter_assets/shaders/ink_sparkle.frag</key>

@@ -12,7 +12,7 @@ import 'package:flame/sprite.dart';
 // self imports
 import 'package:flame_realtime_shooting/game/bullet.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
-import 'package:flame_realtime_shooting/components/raid_1.dart';
+// import 'package:flame_realtime_shooting/components/raid_1.dart';
 
 
 class Player extends PositionComponent with HasGameRef, CollisionCallbacks {

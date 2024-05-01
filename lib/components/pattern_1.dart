@@ -65,7 +65,7 @@ class Pattern1 extends PositionComponent {
 
   void _renderWarning(Canvas canvas, PatternData1 pattern) {
     final paint = Paint()
-      ..color = Colors.red.withOpacity(0.4)
+      ..color = Colors.yellow.withOpacity(0.6)
       ..style = PaintingStyle.fill;
 
     final rectWidth = worldSize.x / 4;
