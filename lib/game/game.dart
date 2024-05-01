@@ -1,5 +1,6 @@
 // dart imports
-import 'dart:async';
+import 'dart:async' as async;
+import 'dart:math';
 
 // flutter imports
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ import 'package:flame_realtime_shooting/components/joypad.dart';
 import 'package:flame_realtime_shooting/components/pattern_1.dart';
 import 'package:flame_realtime_shooting/components/raid_1.dart';
 
+
 late Vector2 worldSize;
 
 class MyGame extends FlameGame with HasCollisionDetection {
@@ -31,12 +33,15 @@ class MyGame extends FlameGame with HasCollisionDetection {
   late final Pattern1 _pattern1;
   late final Raid1 _raid1;
 
+
   final void Function(bool didWin) onGameOver;
+  final Function(Map<String, dynamic>) onFireEvent;
   final void Function(Vector2 position, int health, Direction direction) onGameStateUpdate;
 
   MyGame({
     required this.onGameOver,
     required this.onGameStateUpdate,
+    required this.onFireEvent,
   });
 
   late final flame_image.Image _playerBulletImage;
@@ -78,37 +83,38 @@ class MyGame extends FlameGame with HasCollisionDetection {
     _timerText.text = _gameTimer.formattedTime;
     if (elapsedSeconds == 2) {
       _pattern1 = Pattern1(patternsData: [
-                  PatternData1(0, 500, 1),
-                  PatternData1(500, 1000, 2),
-                  PatternData1(1000, 1500, 3),
-                  PatternData1(1500, 2000, 4),
-                  PatternData1(2000, 2500, 5),
-                ]);
+        PatternData1(0, 500, 1),
+        PatternData1(500, 1000, 2),
+        PatternData1(1000, 1500, 3),
+        PatternData1(1500, 2000, 4),
+        PatternData1(2000, 2500, 5),
+      ]);
       _pattern1.elapsedMilliseconds = 0;
       _pattern1.priority = 2;
       _pattern1.debugMode = true;
       add(_pattern1);
-    } 
+    }
     if (elapsedSeconds == 5) {
       remove(_pattern1);
     }
 
     if (elapsedSeconds == 5) {
       _raid1 = Raid1(raidsData: [
-                RaidData1(0, 700, 1),
-                RaidData1(700, 1400, 2),
-                RaidData1(1400, 2100, 3),
-                RaidData1(2100, 2800, 4),
-                RaidData1(2800, 3500, 5),
+        RaidData1(0, 700, 1),
+        RaidData1(700, 1400, 2),
+        RaidData1(1400, 2100, 3),
+        RaidData1(2100, 2800, 4),
+        RaidData1(2800, 3500, 5),
       ]);
       _raid1.priority = 2;
       _raid1.debugMode = true;
       add(_raid1);
-    } 
+    }
     if (elapsedSeconds == 10) {
       remove(_raid1);
     }
   }
+
 
   Future<void> setupPlayers() async {
     _player = await createPlayer('player-bg.png', true);
@@ -169,46 +175,81 @@ class MyGame extends FlameGame with HasCollisionDetection {
         child.removeFromParent();
       }
     }
-
-    // _shootBullets();
   }
 
-  Future<void> _shootBullets() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final playerBulletInitialPosition = Vector2.copy(_player.position)
-      ..y -= Player.radius;
-    final playerBulletVelocities = [
-      Vector2(0, -100),
-      Vector2(60, -80),
-      Vector2(-60, -80),
-    ];
-    for (final bulletVelocity in playerBulletVelocities) {
-      add((Bullet(
+  Vector2 getBulletVelocity(Direction direction) {
+    const double bulletSpeed = 200;
+    switch (direction) {
+      case Direction.up:
+        return Vector2(0, -bulletSpeed);
+      case Direction.down:
+        return Vector2(0, bulletSpeed);
+      case Direction.left:
+        return Vector2(-bulletSpeed, 0);
+      case Direction.right:
+        return Vector2(bulletSpeed, 0);
+      case Direction.upLeft:
+        return Vector2(-bulletSpeed / sqrt(2), -bulletSpeed / sqrt(2));
+      case Direction.upRight:
+        return Vector2(bulletSpeed / sqrt(2), -bulletSpeed / sqrt(2));
+      case Direction.downLeft:
+        return Vector2(-bulletSpeed / sqrt(2), bulletSpeed / sqrt(2));
+      case Direction.downRight:
+        return Vector2(bulletSpeed / sqrt(2), bulletSpeed / sqrt(2));
+      default:
+        return Vector2(0, -bulletSpeed);
+    }
+  }
+
+  // new //
+  void triggerShooting() {
+    int count = 0;
+    shootBullets(true);
+    async.Timer.periodic(const Duration(milliseconds: 100), (timer) {
+        if (count < 4) {
+            shootBullets(false);
+            count++;
+        } else {
+            timer.cancel();
+        }
+    });
+  }
+
+  // new //
+  Future<void> shootBullets(bool notifyOpponent) async {
+    Vector2 playerBulletVelocity = getBulletVelocity(_player.currentDirection);
+    Vector2 playerBulletInitialPosition = Vector2.copy(_player.position)
+        ..add(playerBulletVelocity.normalized() * Player.radius * 1.5);
+
+    Bullet newBullet = Bullet(
         isMine: true,
-        velocity: bulletVelocity,
+        velocity: playerBulletVelocity,
         image: _playerBulletImage,
         initialPosition: playerBulletInitialPosition,
-      )));
-    }
+    );
+    add(newBullet);
 
-    final opponentBulletInitialPosition = Vector2.copy(_opponent.position)
-      ..y += Player.radius;
-    final opponentBulletVelocities = [
-      Vector2(0, 100),
-      Vector2(60, 80),
-      Vector2(-60, 80),
-    ];
-    for (final bulletVelocity in opponentBulletVelocities) {
-      add((Bullet(
-        isMine: false,
-        velocity: bulletVelocity,
-        image: _opponentBulletImage,
-        initialPosition: opponentBulletInitialPosition,
-      )));
+    if (notifyOpponent) {
+      Map<String, dynamic> fireEventData = {
+        'direction': _player.currentDirection.index,
+        'x': playerBulletInitialPosition.x / worldSize.x,
+        'y': playerBulletInitialPosition.y / worldSize.y,
+      };
+      onFireEvent(fireEventData);
     }
-
-    _shootBullets();
   }
+
+  void createBulletForOpponent(Vector2 startPosition, Direction direction) {
+    Vector2 bulletVelocity = getBulletVelocity(direction);
+    Bullet newBullet = Bullet(
+      isMine: false,
+      velocity: bulletVelocity,
+      image: _opponentBulletImage,
+      initialPosition: startPosition,
+    );
+    add(newBullet); 
+  }
+  // new //
 
   void updateOpponent({required Vector2 position, required int health, required Direction direction}) {
     _opponent.position = Vector2(size.x * position.x, size.y * position.y);
