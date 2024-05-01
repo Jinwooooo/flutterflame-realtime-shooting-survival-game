@@ -2,6 +2,7 @@
 import 'dart:async';
 
 // flutter imports
+import 'package:flame_realtime_shooting/game/cannon.dart';
 import 'package:flutter/material.dart';
 
 // flame imports
@@ -85,7 +86,13 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
     if (other is Bullet && _isMyPlayer != other.isMine) {
+
       other.hasBeenHit = true;
+      other.removeFromParent();
+    }
+    // new
+    if (other is Cannon && _isMyPlayer != other.isCannon) {
+      other.hasBeenCannon = true;
       other.removeFromParent();
     }
   }

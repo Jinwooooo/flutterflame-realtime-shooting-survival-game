@@ -12,7 +12,7 @@ class Bullet extends PositionComponent with CollisionCallbacks, HasGameRef {
   static const radius = 5.0;
   bool hasBeenHit = false;
   final bool isMine;
-  final int damage = 5;
+  int damage = 5;
 
   Bullet({
     required this.isMine,

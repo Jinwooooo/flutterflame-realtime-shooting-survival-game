@@ -1,13 +1,11 @@
-// dart imports
 import 'dart:async';
 
-// flutter imports
 import 'package:flutter/material.dart';
 
 class ItemButton extends StatefulWidget {
-  final VoidCallback? onFirePressed;
+  final VoidCallback? onItemPressed;
 
-  const ItemButton({Key? key, this.onFirePressed}) : super(key: key);
+  const ItemButton({Key? key, this.onItemPressed}) : super(key: key);
 
   @override
   _ItemButtonState createState() => _ItemButtonState();
@@ -23,14 +21,14 @@ class _ItemButtonState extends State<ItemButton> {
       child: Opacity(
         opacity: _isButtonEnabled ? 1.0 : 0.5,
         child: Container(
-          width: 120,
-          height: 120,
+          width: 100,
+          height: 100,
           decoration: BoxDecoration(
-            color: Colors.red,
+            color: Colors.blue, // Changed to blue to differentiate from the fire button
             shape: BoxShape.circle,
           ),
           child: Center(
-            child: Icon(Icons.fireplace, size: 50, color: Colors.white),
+            child: Icon(Icons.card_giftcard, size: 50, color: Colors.white), // Icon changed to represent items
           ),
         ),
       ),
@@ -38,8 +36,8 @@ class _ItemButtonState extends State<ItemButton> {
   }
 
   void _handlePress() {
-    if (widget.onFirePressed != null) {
-      widget.onFirePressed!();
+    if (widget.onItemPressed != null) {
+      widget.onItemPressed!();
       _startCooldown();
     }
   }
@@ -48,7 +46,7 @@ class _ItemButtonState extends State<ItemButton> {
     setState(() {
       _isButtonEnabled = false;
     });
-    Timer(Duration(seconds: 5), () {
+    Timer(Duration(seconds: 5), () { // Cooldown timer to prevent spamming
       if (mounted) {
         setState(() {
           _isButtonEnabled = true;

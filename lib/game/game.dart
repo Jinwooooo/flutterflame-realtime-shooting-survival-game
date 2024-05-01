@@ -1,8 +1,9 @@
 // dart imports
-import 'dart:async';
+import 'dart:async' as async;
 import 'dart:math';
 
 // flutter imports
+import 'package:flame_realtime_shooting/game/cannon.dart';
 import 'package:flutter/material.dart';
 
 // flame imports
@@ -35,11 +36,15 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
 
   final void Function(bool didWin) onGameOver;
+  final Function(Map<String, dynamic>) onFireEvent;
+  final Function(Map<String, dynamic>) itemEvent;
   final void Function(Vector2 position, int health, Direction direction) onGameStateUpdate;
 
   MyGame({
     required this.onGameOver,
     required this.onGameStateUpdate,
+    required this.onFireEvent,
+    required this.itemEvent,
   });
 
   late final flame_image.Image _playerBulletImage;
@@ -66,7 +71,6 @@ class MyGame extends FlameGame with HasCollisionDetection {
     await setupPlayers();
     await setupBackground();
     setupCamera();
-
     _playerBulletImage = await images.load('player-bullet.png');
     _opponentBulletImage = await images.load('opponent-bullet.png');
   }
@@ -146,16 +150,24 @@ class MyGame extends FlameGame with HasCollisionDetection {
   @override
   void update(double dt) {
     super.update(dt);
-    if (isGameOver) {
-      return;
-    }
+    if (isGameOver) return;
+
     for (final child in children) {
+      // Check if the component is a Bullet and has been hit, and it is not mine
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
-        _playerHealthPoint = _playerHealthPoint - child.damage;
+        _playerHealthPoint -= child.damage;
+        onGameStateUpdate(_player.position, _playerHealthPoint, _player.currentDirection);
+        _player.updateHealth(_playerHealthPoint / _initialHealthPoints);
+      }
+      // Check if the component is a Cannon and has been hit, and it is not mine
+      if (child is Cannon && child.hasBeenCannon && !child.isCannon) {
+        _playerHealthPoint -= child.damage;
+        print('hit by cannon');
         onGameStateUpdate(_player.position, _playerHealthPoint, _player.currentDirection);
         _player.updateHealth(_playerHealthPoint / _initialHealthPoints);
       }
     }
+
     if (_playerHealthPoint <= 0) {
       endGame(false);
     }
@@ -166,18 +178,15 @@ class MyGame extends FlameGame with HasCollisionDetection {
     _gameTimer.start();
     _playerHealthPoint = _initialHealthPoints;
 
-    for (final child in children) {
-      if (child is Player) {
-        child.position = child.initialPosition;
-      } else if (child is Bullet) {
-        child.removeFromParent();
-      }
-    }
-
-    shootBullets();
+    // for (final child in children) {
+    //   if (child is Player) {
+    //     child.position = child.initialPosition;
+    //   } else if (child is Bullet) {
+    //     child.removeFromParent();
+    //   }
+    // }
   }
 
-  // 총알 속도 및 방향 계산 함수
   Vector2 getBulletVelocity(Direction direction) {
     const double bulletSpeed = 200;
     switch (direction) {
@@ -198,39 +207,111 @@ class MyGame extends FlameGame with HasCollisionDetection {
       case Direction.downRight:
         return Vector2(bulletSpeed / sqrt(2), bulletSpeed / sqrt(2));
       default:
-        return Vector2(0, -bulletSpeed);  // 기본 방향
+        return Vector2(0, -bulletSpeed);
     }
   }
 
-  Future<void> shootBullets() async {
-    await Future.delayed(const Duration(milliseconds: 500));  // 필요한 경우 대기
+  // new //
+  void triggerShooting() {
+    int count = 0;
+    shootBullets(true);
+    async.Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (count < 4) {
+        shootBullets(false);
+        count++;
+      } else {
+        timer.cancel();
+      }
+    });
+  }
 
 
-// 플레이어 총알 발사
+
+
+
+  // new //
+  Future<void> shootBullets(bool notifyOpponent) async {
     Vector2 playerBulletVelocity = getBulletVelocity(_player.currentDirection);
     Vector2 playerBulletInitialPosition = Vector2.copy(_player.position)
-      ..add(playerBulletVelocity.normalized() * Player.radius * 1.5); // 중심에서 더 멀리 위치 조정
+      ..add(playerBulletVelocity.normalized() * Player.radius * 1.5);
 
-    add(Bullet(
+    Bullet newBullet = Bullet(
       isMine: true,
       velocity: playerBulletVelocity,
       image: _playerBulletImage,
       initialPosition: playerBulletInitialPosition,
-    ));
+    );
+    add(newBullet);
 
-// 상대방 총알 발사
-    Vector2 opponentBulletVelocity = getBulletVelocity(_opponent.currentDirection);
-    Vector2 opponentBulletInitialPosition = Vector2.copy(_opponent.position)
-      ..add(opponentBulletVelocity.normalized() * Player.radius * 1.5); // 중심에서 더 멀리 위치 조정
+    if (notifyOpponent) {
+      Map<String, dynamic> fireEventData = {
+        'direction': _player.currentDirection.index,
+        'x': playerBulletInitialPosition.x / worldSize.x,
+        'y': playerBulletInitialPosition.y / worldSize.y,
+      };
+      onFireEvent(fireEventData);
+    }
+  }
 
-    add(Bullet(
+
+  void createBulletForOpponent(Vector2 startPosition, Direction direction) {
+    Vector2 bulletVelocity = getBulletVelocity(direction);
+    Bullet newBullet = Bullet(
       isMine: false,
-      velocity: opponentBulletVelocity,
+      velocity: bulletVelocity,
       image: _opponentBulletImage,
-      initialPosition: opponentBulletInitialPosition,
-    ));
+      initialPosition: startPosition,
+    );
+    add(newBullet);
+  }
 
-    shootBullets();  // 지속적인 발사를 위한 재귀 호출
+  // new //
+  void triggerCannonShooting() {
+    int count = 0;
+    shootCannons(true);  // First shot, notify the opponent
+    async.Timer.periodic(Duration(milliseconds: 100), (timer) {
+      if (count < 3) {  // Shoot 4 more times
+        shootCannons(false);  // Subsequent shots do not need to notify the opponent
+        count++;
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  Future<void> shootCannons(bool notifyOpponent) async {
+    Vector2 cannonVelocity = getBulletVelocity(_player.currentDirection);
+    Vector2 cannonInitialPosition = Vector2.copy(_player.position)
+      ..add(cannonVelocity.normalized() * Player.radius * 1.5);
+
+    Cannon newCannon = Cannon(
+      isCannon: true,
+      velocity: cannonVelocity,
+      image: await images.load('cannon-1.png'),  // 캐논에 맞는 이미지 사용
+      initialPosition: cannonInitialPosition,
+    );
+    add(newCannon);
+
+    if (notifyOpponent) {
+      Map<String, dynamic> itemEventData = {
+        'direction': _player.currentDirection.index,
+        'x': cannonInitialPosition.x / worldSize.x,
+        'y': cannonInitialPosition.y / worldSize.y,
+      };
+      itemEvent(itemEventData);  // 이벤트 데이터 전송 확인
+    }
+  }
+
+
+  void createCannonForOpponent(Vector2 startPosition, Direction direction) {
+    Vector2 bulletVelocity = getBulletVelocity(direction);
+    Cannon newCannon = Cannon(
+      isCannon: false,
+      velocity: bulletVelocity,
+      image: _opponentBulletImage,
+      initialPosition: startPosition,
+    );
+    add(newCannon);
   }
 
   void updateOpponent({required Vector2 position, required int health, required Direction direction}) {

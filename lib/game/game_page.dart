@@ -1,5 +1,9 @@
+// dart imports
+import 'dart:async' as async;
+
 // flame imports
 import 'package:flame/game.dart';
+import 'package:flame_realtime_shooting/components/item_button.dart';
 
 // flutter imports
 import 'package:flutter/cupertino.dart';
@@ -13,9 +17,7 @@ import 'package:uuid/uuid.dart';
 import 'package:flame_realtime_shooting/main.dart';
 import 'package:flame_realtime_shooting/game/game.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
-
-import '../components/fire_button.dart';
-import '../components/item_button.dart';
+import 'package:flame_realtime_shooting/components/fire_bullet_button.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key});
@@ -34,7 +36,7 @@ class _GamePageState extends State<GamePage> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/images/background.jpg', fit: BoxFit.cover),
+          Image.asset('assets/images/brown-background.avif', fit: BoxFit.cover),
           GameWidget(game: _game),
           Positioned(
             left: 20,
@@ -46,19 +48,21 @@ class _GamePageState extends State<GamePage> {
           Positioned(
             right: 20,
             bottom: 10,
-            child: FireButton(
-              // onFirePressed: () {
-              //   _game.shootBullets();
-              //   Future.delayed(const Duration(milliseconds: 500), () {
-              //   });
-              // },
+            child: FireBulletButton(
+              onFirePressed: _game.triggerShooting,
+            ),
+          ),
+          Positioned(
+            right: 20,
+            bottom: 150,
+            child: ItemButton(
+              onItemPressed: _game.triggerCannonShooting,
             ),
           ),
         ],
       ),
     );
   }
-
 
   @override
   void initState() {
@@ -68,41 +72,53 @@ class _GamePageState extends State<GamePage> {
 
   Future<void> _initialize() async {
     _game = MyGame(
-      onGameStateUpdate:
-          (Vector2 position, int health, Direction direction) async {
-        ChannelResponse response;
-        do {
-          response = await _gameChannel!.sendBroadcastMessage(
-            event: 'game_state',
-            payload: {
-              'x': position.x / worldSize.x,
-              'y': position.y / worldSize.y,
-              'health': health,
-              'direction': direction.index
-            },
+        onGameStateUpdate: (Vector2 position, int health, Direction direction) async {
+          ChannelResponse response;
+          do {
+            response = await _gameChannel!.sendBroadcastMessage(
+              event: 'game_state',
+              payload: {
+                'x': position.x / worldSize.x,
+                'y': position.y / worldSize.y,
+                'health': health,
+                'direction': direction.index,
+              },
+            );
+            await Future.delayed(Duration.zero);
+            setState(() {});
+          } while (response == ChannelResponse.rateLimited && health <= 0);
+        },
+        onGameOver: (playerWon) async {
+          await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(playerWon ? 'You Won!' : 'You lost...'),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    await supabase.removeChannel(_gameChannel!);
+                    _openLobbyDialog();
+                  },
+                  child: const Text('Back to Lobby'),
+                ),
+              ],
+            ),
           );
-          await Future.delayed(Duration.zero);
-          setState(() {});
-        } while (response == ChannelResponse.rateLimited && health <= 0);
-      },
-      onGameOver: (playerWon) async {
-        await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(playerWon ? 'You Won!' : 'You lost...'),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  await supabase.removeChannel(_gameChannel!);
-                  _openLobbyDialog();
-                },
-                child: const Text('Back to Lobby'),
-              ),
-            ],
-          ),
+        },
+        onFireEvent: (Map<String, dynamic> eventData) {
+          _gameChannel!.sendBroadcastMessage(
+            event: 'bullet_fire',
+            payload: eventData,
+          );
+        },
+        itemEvent: (Map<String, dynamic> cannonData) {
+        _gameChannel!.sendBroadcastMessage(
+          event: 'cannon_fire',
+          payload: cannonData,
         );
-      },
+        },
+
     );
 
     await Future.delayed(Duration.zero);
@@ -116,43 +132,77 @@ class _GamePageState extends State<GamePage> {
         context: context,
         barrierDismissible: false,
         builder: (context) => _LobbyDialog(
-              onGameStarted: (gameId) async {
-                await Future.delayed(Duration.zero);
-                setState(() {});
-                _game.startNewGame();
-                _gameChannel = supabase.channel(gameId,
-                    opts: const RealtimeChannelConfig(ack: true));
-
-                _gameChannel!
-                    .onBroadcast(
-                      event: 'game_state',
-                      callback: (payload, [_]) {
-                        // final position = Vector2((payload['x'] as double) * worldSize.x, (payload['y'] as double) * worldSize.y);
-                        final position = Vector2(
-                            (payload['x'] as double), (payload['y'] as double));
-                        final opponentHealth = payload['health'] as int;
-                        final directionIndex = payload['direction'] as int;
-                        final direction = Direction.values[directionIndex];
-                        _game.updateOpponent(
-                          position: position,
-                          health: opponentHealth,
-                          direction: direction,
-                        );
-                        if (opponentHealth <= 0 && !_game.isGameOver) {
-                          _game.isGameOver = true;
-                          _game.onGameOver(true);
-                        }
-                      },
-                    )
-                    .subscribe();
+          onGameStarted: (gameId) async {
+            await Future.delayed(Duration.zero);
+            setState(() {});
+            _game.startNewGame();
+            _gameChannel = supabase.channel(gameId,
+                opts: const RealtimeChannelConfig(ack: true));
+            _gameChannel!.onBroadcast(
+              event: 'game_state',
+              callback: (payload, [_]) {
+                final position = Vector2((payload['x'] as double), (payload['y'] as double));
+                final opponentHealth = payload['health'] as int;
+                final directionIndex = payload['direction'] as int;
+                final direction = Direction.values[directionIndex];
+                _game.updateOpponent(
+                  position: position,
+                  health: opponentHealth,
+                  direction: direction,
+                );
+                if (opponentHealth <= 0 && !_game.isGameOver) {
+                  _game.isGameOver = true;
+                  _game.onGameOver(true);
+                }
               },
-            ));
+            ).subscribe();
+            _gameChannel!.onBroadcast(
+              event: 'bullet_fire',
+              callback: (payload, [_]) {
+                Vector2 start = Vector2(
+                    payload['x'] * worldSize.x,
+                    payload['y'] * worldSize.y
+                );
+                Direction direction = Direction.values[payload['direction']];
+                int shotsCount = 5;  // Number of bullets to fire
+                int interval = 100;  // Interval between shots in milliseconds
+
+                async.Timer.periodic(Duration(milliseconds: interval), (timer) {
+                  if (shotsCount > 0) {
+                    _game.createBulletForOpponent(start, direction);
+                    shotsCount--;
+                  } else {
+                    timer.cancel();
+                  }
+                });
+              },
+            );
+            _gameChannel!.onBroadcast(
+              event: 'cannon_fire',
+              callback: (payload, [_]) {
+                Vector2 start = Vector2(
+                    payload['x'] * worldSize.x,
+                    payload['y'] * worldSize.y
+                );
+                Direction direction = Direction.values[payload['direction']];
+                int interval = 100;  // Interval between shots in milliseconds
+                int cannonCount = 4;  // Number of bullets to cannon
+
+                async.Timer.periodic(Duration(milliseconds: interval), (timer) {
+                  if (cannonCount> 0) {
+                    _game.createBulletForOpponent(start, direction);
+                    cannonCount--;
+                  } else {
+                    timer.cancel();
+                  }
+                });
+              },
+            );
+          },
+        )
+    );
   }
-
-
-
 }
-
 
 
 
@@ -183,29 +233,29 @@ class _LobbyDialogState extends State<_LobbyDialog> {
 
     _lobbyChannel
         .onPresenceSync((payload, [ref]) {
-          final presenceStates = _lobbyChannel.presenceState();
-          setState(() {
-            _userids = presenceStates
-                .map((presenceState) =>
-                    presenceState.presences.first.payload['user_id'] as String)
-                .toList();
-          });
-        })
+      final presenceStates = _lobbyChannel.presenceState();
+      setState(() {
+        _userids = presenceStates
+            .map((presenceState) =>
+        presenceState.presences.first.payload['user_id'] as String)
+            .toList();
+      });
+    })
         .onBroadcast(
-            event: 'game_start',
-            callback: (payload, [_]) {
-              final participantIds = List<String>.from(payload['participants']);
-              if (participantIds.contains(myUserId)) {
-                final gameId = payload['game_id'] as String;
-                widget.onGameStarted(gameId);
-                Navigator.of(context).pop();
-              }
-            })
-        .subscribe((status, _) async {
-          if (status == RealtimeSubscribeStatus.subscribed) {
-            await _lobbyChannel.track({'user_id': myUserId});
+        event: 'game_start',
+        callback: (payload, [_]) {
+          final participantIds = List<String>.from(payload['participants']);
+          if (participantIds.contains(myUserId)) {
+            final gameId = payload['game_id'] as String;
+            widget.onGameStarted(gameId);
+            Navigator.of(context).pop();
           }
-        });
+        })
+        .subscribe((status, _) async {
+      if (status == RealtimeSubscribeStatus.subscribed) {
+        await _lobbyChannel.track({'user_id': myUserId});
+      }
+    });
   }
 
   @override
@@ -220,30 +270,30 @@ class _LobbyDialogState extends State<_LobbyDialog> {
       title: const Text('Lobby'),
       content: _loading
           ? const SizedBox(
-              height: 100,
-              child: Center(child: CircularProgressIndicator()),
-            )
+        height: 100,
+        child: Center(child: CircularProgressIndicator()),
+      )
           : Text('${_userids.length} users waiting'),
       actions: [
         TextButton(
           onPressed: _userids.length < 2
               ? null
               : () async {
-                  setState(() {
-                    _loading = true;
-                  });
+            setState(() {
+              _loading = true;
+            });
 
-                  final opponentId =
-                      _userids.firstWhere((userId) => userId != myUserId);
-                  final gameId = const Uuid().v4();
-                  await _lobbyChannel.sendBroadcastMessage(
-                    event: 'game_start',
-                    payload: {
-                      'participants': [opponentId, myUserId],
-                      'game_id': gameId,
-                    },
-                  );
-                },
+            final opponentId =
+            _userids.firstWhere((userId) => userId != myUserId);
+            final gameId = const Uuid().v4();
+            await _lobbyChannel.sendBroadcastMessage(
+              event: 'game_start',
+              payload: {
+                'participants': [opponentId, myUserId],
+                'game_id': gameId,
+              },
+            );
+          },
           child: const Text('Start Game'),
         ),
       ],
