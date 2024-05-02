@@ -11,8 +11,9 @@ import 'package:flame/components.dart';
 import 'package:flame/image_composition.dart' as flame_image;
 
 // self imports
-import 'package:flame_realtime_shooting/game/bullet.dart';
 import 'package:flame_realtime_shooting/game/player.dart';
+import 'package:flame_realtime_shooting/game/bullet.dart';
+import 'package:flame_realtime_shooting/game/cannon.dart';
 import 'package:flame_realtime_shooting/components/time.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
 import 'package:flame_realtime_shooting/components/pattern_1.dart';
@@ -25,7 +26,6 @@ class MyGame extends FlameGame with HasCollisionDetection {
   late final TextComponent _timerText;
   late GameTimer _gameTimer;
   late Player _player, _opponent;
-  late CameraComponent _camera;
   static const _initialHealthPoints = 100;
   int _playerHealthPoint = _initialHealthPoints;
   bool isGameOver = true;
@@ -33,15 +33,18 @@ class MyGame extends FlameGame with HasCollisionDetection {
   late final Pattern1 _pattern1;
   late final Raid1 _raid1;
 
-
   final void Function(bool didWin) onGameOver;
   final Function(Map<String, dynamic>) onFireEvent;
+  final Function(Map<String, dynamic>) onCannonEvent;
   final void Function(Vector2 position, int health, Direction direction) onGameStateUpdate;
+
+  void Function(bool)? onJoypadEnabledChanged;
 
   MyGame({
     required this.onGameOver,
     required this.onGameStateUpdate,
-    required this.onFireEvent,
+    required this.onFireEvent, 
+    required this.onCannonEvent,
   });
 
   late final flame_image.Image _playerBulletImage;
@@ -58,29 +61,28 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
     _timerText = TextComponent(
       text: "00:00",
-      position: Vector2(10, 10), // Position it at the top left corner
-      textRenderer: TextPaint(style: TextStyle(color: Colors.white, fontSize: 24)),
+      position: Vector2(10, 10), 
+      textRenderer: TextPaint(style: const TextStyle(color: Colors.white, fontSize: 24)),
     );
     add(_timerText);
-
     _gameTimer = GameTimer(onTick: handleTimeTick);
 
     await setupPlayers();
     await setupBackground();
-    setupCamera();
 
     _playerBulletImage = await images.load('player-bullet.png');
     _opponentBulletImage = await images.load('opponent-bullet.png');
   }
 
   @override
-  void onGameResize(Vector2 canvasSize) {
-    super.onGameResize(canvasSize);
-    worldSize = canvasSize;
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    worldSize = size;
   }
 
   void handleTimeTick(int elapsedSeconds) {
     _timerText.text = _gameTimer.formattedTime;
+
     if (elapsedSeconds == 2) {
       _pattern1 = Pattern1(patternsData: [
         PatternData1(0, 500, 1),
@@ -91,7 +93,6 @@ class MyGame extends FlameGame with HasCollisionDetection {
       ]);
       _pattern1.elapsedMilliseconds = 0;
       _pattern1.priority = 2;
-      _pattern1.debugMode = true;
       add(_pattern1);
     }
     if (elapsedSeconds == 5) {
@@ -107,14 +108,12 @@ class MyGame extends FlameGame with HasCollisionDetection {
         RaidData1(2800, 3500, 5),
       ]);
       _raid1.priority = 2;
-      _raid1.debugMode = true;
       add(_raid1);
     }
     if (elapsedSeconds == 10) {
       remove(_raid1);
     }
   }
-
 
   Future<void> setupPlayers() async {
     _player = await createPlayer('player-bg.png', true);
@@ -134,15 +133,10 @@ class MyGame extends FlameGame with HasCollisionDetection {
   }
 
   Future<void> setupBackground() async {
-    final backgroundImage = await images.load('brown-background.avif');
+    final backgroundImage = await images.load('brown-background.png');
     final background = SpriteComponent(sprite: Sprite(backgroundImage), size: Vector2(worldSize[0], worldSize[1]));
     background.priority = -1;
     add(background);
-  }
-
-  void setupCamera() {
-    _camera = CameraComponent()..follow(_player);
-    add(_camera);
   }
 
   @override
@@ -151,13 +145,21 @@ class MyGame extends FlameGame with HasCollisionDetection {
     if (isGameOver) {
       return;
     }
+
     for (final child in children) {
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
-        _playerHealthPoint = _playerHealthPoint - child.damage;
+        _playerHealthPoint -= child.damage;
+        onGameStateUpdate(_player.position, _playerHealthPoint, _player.currentDirection);
+        _player.updateHealth(_playerHealthPoint / _initialHealthPoints);
+      }
+
+      if (child is Cannon && child.hasBeenHit && !child.isMine) {
+        _playerHealthPoint -= child.damage;
         onGameStateUpdate(_player.position, _playerHealthPoint, _player.currentDirection);
         _player.updateHealth(_playerHealthPoint / _initialHealthPoints);
       }
     }
+
     if (_playerHealthPoint <= 0) {
       endGame(false);
     }
@@ -174,6 +176,17 @@ class MyGame extends FlameGame with HasCollisionDetection {
       } else if (child is Bullet) {
         child.removeFromParent();
       }
+    }
+  }
+
+  void updatePlayerHealth(Player player, int damage) {
+    if (player == _player) {
+      _playerHealthPoint -= damage;
+      if (_playerHealthPoint <= 0) {
+        endGame(false);
+      }
+      onGameStateUpdate(_player.position, _playerHealthPoint, _player.currentDirection);
+      _player.updateHealth(_playerHealthPoint / _initialHealthPoints);
     }
   }
 
@@ -201,7 +214,30 @@ class MyGame extends FlameGame with HasCollisionDetection {
     }
   }
 
-  // new //
+  Vector2 getCanonVelocity(Direction direction) {
+    const double bulletSpeed = 400;
+    switch (direction) {
+      case Direction.up:
+        return Vector2(0, -bulletSpeed);
+      case Direction.down:
+        return Vector2(0, bulletSpeed);
+      case Direction.left:
+        return Vector2(-bulletSpeed, 0);
+      case Direction.right:
+        return Vector2(bulletSpeed, 0);
+      case Direction.upLeft:
+        return Vector2(-bulletSpeed / sqrt(2), -bulletSpeed / sqrt(2));
+      case Direction.upRight:
+        return Vector2(bulletSpeed / sqrt(2), -bulletSpeed / sqrt(2));
+      case Direction.downLeft:
+        return Vector2(-bulletSpeed / sqrt(2), bulletSpeed / sqrt(2));
+      case Direction.downRight:
+        return Vector2(bulletSpeed / sqrt(2), bulletSpeed / sqrt(2));
+      default:
+        return Vector2(0, -bulletSpeed);
+    }
+  }
+
   void triggerShooting() {
     int count = 0;
     shootBullets(true);
@@ -215,7 +251,6 @@ class MyGame extends FlameGame with HasCollisionDetection {
     });
   }
 
-  // new //
   Future<void> shootBullets(bool notifyOpponent) async {
     Vector2 playerBulletVelocity = getBulletVelocity(_player.currentDirection);
     Vector2 playerBulletInitialPosition = Vector2.copy(_player.position)
@@ -249,7 +284,44 @@ class MyGame extends FlameGame with HasCollisionDetection {
     );
     add(newBullet); 
   }
-  // new //
+
+  void triggerCannonShooting() {
+    shootCannons(true);
+  }
+
+  Future<void> shootCannons(bool notifyOpponent) async {
+    Vector2 cannonVelocity = getCanonVelocity(_player.currentDirection);
+    Vector2 cannonInitialPosition = Vector2.copy(_player.position)
+      ..add(cannonVelocity.normalized() * Player.radius * 1.5);
+
+    Cannon newCannon = Cannon(
+      isMine: true,
+      velocity: cannonVelocity,
+      image: await images.load('player-bullet.png'),
+      initialPosition: cannonInitialPosition,
+    );
+    add(newCannon);
+
+    if (notifyOpponent) {
+      Map<String, dynamic> cannonEventData = {
+        'direction': _player.currentDirection.index,
+        'x': cannonInitialPosition.x / worldSize.x,
+        'y': cannonInitialPosition.y / worldSize.y,
+      };
+      onCannonEvent(cannonEventData);
+    }
+  }
+
+  void createCannonForOpponent(Vector2 startPosition, Direction direction) {
+    Vector2 cannonVelocity = getCanonVelocity(direction);
+    Cannon newCannon = Cannon(
+      isMine: false,
+      velocity: cannonVelocity,
+      image: _opponentBulletImage,
+      initialPosition: startPosition,
+    );
+    add(newCannon);
+  }
 
   void updateOpponent({required Vector2 position, required int health, required Direction direction}) {
     _opponent.position = Vector2(size.x * position.x, size.y * position.y);
@@ -308,5 +380,16 @@ class MyGame extends FlameGame with HasCollisionDetection {
       _player.updateDirection(direction);
     }
     onGameStateUpdate(_player.position, _playerHealthPoint, _player.currentDirection);
+  }
+
+  void enableJoypad(bool enable) {
+    onJoypadEnabledChanged?.call(enable);
+  }
+
+  void disableJoypadTemporarily() {
+    enableJoypad(false); 
+    Future.delayed(const Duration(seconds: 10), () {
+      enableJoypad(true);
+    });
   }
 }

@@ -1,5 +1,4 @@
 // flutter imports
-import 'package:flame/particles.dart';
 import 'package:flutter/material.dart';
 
 // flame imports
@@ -12,10 +11,9 @@ import 'package:flame/sprite.dart';
 import 'package:flame_realtime_shooting/game/game.dart';
 
 
-class Raid1 extends PositionComponent {
+class Raid1 extends PositionComponent with HasGameRef, CollisionCallbacks {
   final List<RaidData1> raidsData;
   late SpriteAnimationTicker explosionAnimation;
-  late SpriteAnimation test;
   double elapsedMilliseconds = 0;
   Map<int, RectangleComponent> activeExplosions = {};
 
@@ -47,7 +45,7 @@ class Raid1 extends PositionComponent {
       super.update(dt);
       elapsedMilliseconds += dt * 1000;
       explosionAnimation.update(dt);
-      manageExplosions();
+      _manageExplosions();
   }
 
   @override
@@ -61,86 +59,51 @@ class Raid1 extends PositionComponent {
   }
 
   void _renderExplosions(Canvas canvas, RaidData1 pattern) {
-    if (pattern.quadrant == 5) {
-      final rectWidth = (worldSize.x * 3) / 4;
-      final rectHeight = worldSize.y;
-      final startX = worldSize.x / 4;
-      final startY = 0.0;
+    final isQuadrantFive = pattern.quadrant == 5;
+    final rectWidth = isQuadrantFive ? worldSize.x * 3 / 4 : worldSize.x / 4;
+    final startX = isQuadrantFive ? 0.0 : worldSize.x * (pattern.quadrant - 1) / 4;
+    final rectHeight = worldSize.y;
+    final rectPaint = Paint()..color = Colors.red.withOpacity(0.7);
 
-      final rectPaint = Paint()..color = Colors.red.withOpacity(0.7);
-      canvas.drawRect(Rect.fromLTWH(startX, startY, rectWidth, rectHeight), rectPaint);
+    canvas.drawRect(Rect.fromLTWH(startX, 0, rectWidth, rectHeight), rectPaint);
 
-      for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-          explosionAnimation.getSprite().render(canvas, 
-                                              position: Vector2(startX + worldSize.x * j / 4, startY + worldSize.y * i / 3), 
-                                              size: Vector2(worldSize.x / 4, worldSize.y / 3));
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < (isQuadrantFive ? 3 : 1); j++) {
+        double posX = startX + worldSize.x * j / (isQuadrantFive ? 4 : 1);
+        double posY = worldSize.y * i / 3;
+        explosionAnimation.getSprite().render(canvas, 
+                                              position: Vector2(posX, posY), 
+                                              size: Vector2(rectWidth / (isQuadrantFive ? 3 : 1), worldSize.y / 3));
+      }
+    }
+  }
+
+  void _manageExplosions() {
+    for (var pattern in raidsData) {
+    if (elapsedMilliseconds >= pattern.startTime && elapsedMilliseconds <= pattern.endTime) {
+        if (!activeExplosions.containsKey(pattern.quadrant)) {
+          final explosionArea = _createExplosionArea(pattern);
+          add(explosionArea);
+          activeExplosions[pattern.quadrant] = explosionArea;
+        }
+      } else {
+        if (activeExplosions.containsKey(pattern.quadrant)) {
+          remove(activeExplosions[pattern.quadrant]!);
+          activeExplosions.remove(pattern.quadrant);
         }
       }
-    } else {
-      final rectWidth = worldSize.x / 4;
-      final rectHeight = worldSize.y;
-      final startX = worldSize.x * (pattern.quadrant - 1) / 4;
-      final startY = 0.0;
-
-      final rectPaint = Paint()..color = Colors.red.withOpacity(0.7);
-      canvas.drawRect(Rect.fromLTWH(startX, startY, rectWidth, rectHeight), rectPaint);
-
-      for (int i = 0; i < 3; i++) {
-        explosionAnimation.getSprite().render(canvas, 
-                                              position: Vector2(startX, startY + worldSize.y * i / 3), 
-                                              size: Vector2(worldSize.x / 4, worldSize.y / 3));
-      }
     }
   }
 
-  void manageExplosions() {
-      raidsData.forEach((pattern) {
-          if (elapsedMilliseconds >= pattern.startTime && elapsedMilliseconds <= pattern.endTime) {
-              if (!activeExplosions.containsKey(pattern.quadrant)) {
-                  final explosionArea = createExplosionArea(pattern);
-                  add(explosionArea);
-                  activeExplosions[pattern.quadrant] = explosionArea;
-              }
-          } else {
-              if (activeExplosions.containsKey(pattern.quadrant)) {
-                  remove(activeExplosions[pattern.quadrant]!);
-                  activeExplosions.remove(pattern.quadrant);
-              }
-          }
-      });
-  }
+  RaidRectangle _createExplosionArea(RaidData1 pattern) {
+    double startX = (pattern.quadrant == 5) ? 0.0 : worldSize.x * (pattern.quadrant - 1) / 4;
+    double width = (pattern.quadrant == 5) ? worldSize.x * 3 / 4 : worldSize.x / 4;
+    double height = worldSize.y;
 
-  RectangleComponent createExplosionArea(RaidData1 pattern) {
-    if (pattern.quadrant == 5) {
-      double startX = worldSize.x / 4;
-      double width = worldSize.x * 3 / 4;
-      double height = worldSize.y;
-
-      final explosionArea = RectangleComponent()
-        ..position = Vector2(startX, 0)
-        ..size = Vector2(width, height)
-        ..anchor = Anchor.topLeft;
-        
-      explosionArea.opacity = 0;
-      explosionArea.add(RectangleHitbox());
-
-      return explosionArea;
-    } else {
-      double startX = worldSize.x * (pattern.quadrant - 1) / 4;
-      double width = worldSize.x / 4;
-      double height = worldSize.y;
-
-      final explosionArea = RectangleComponent()
-        ..position = Vector2(startX, 0)
-        ..size = Vector2(width, height)
-        ..anchor = Anchor.topLeft;
-
-      explosionArea.opacity = 0;
-      explosionArea.add(RectangleHitbox());
-
-      return explosionArea;
-    }
+    return RaidRectangle(
+      position: Vector2(startX, 0),
+      size: Vector2(width, height),
+    );
   }
 }
 
@@ -150,4 +113,16 @@ class RaidData1 {
     final int quadrant;
 
     RaidData1(this.startTime, this.endTime, this.quadrant);
+}
+
+class RaidRectangle extends RectangleComponent {
+  final bool isRaid = true;
+
+  RaidRectangle({
+    required Vector2 position,
+    required Vector2 size,
+  }) : super(position: position, size: size) {
+    paint = Paint()..color = Colors.transparent;
+    add(RectangleHitbox());
+  }
 }

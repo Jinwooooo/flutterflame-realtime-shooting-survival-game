@@ -68,28 +68,20 @@ class Pattern1 extends PositionComponent {
       ..color = Colors.yellow.withOpacity(0.6)
       ..style = PaintingStyle.fill;
 
-    final rectWidth = worldSize.x / 4;
-    final rectHeight = worldSize.y;
-    final startX = worldSize.x * (pattern.quadrant - 1) / 4;
-    final startY = 0.0;
+    double rectWidth = worldSize.x / 4;
+    double startX = worldSize.x * (pattern.quadrant - 1) / 4;
 
     if (pattern.quadrant == 5) {
-      canvas.drawRect(Rect.fromLTWH(worldSize.x / 4, 0.0, worldSize.x, worldSize.y), paint);
+        rectWidth = worldSize.x * 3 / 4;
+        startX = 0.0;
+    }
 
-      if (warningIconImage != null) {
-        final iconX = ((worldSize.x * 5) / 8) - (warningIconImage!.width) / 2;
-        final iconY = (worldSize.y - warningIconImage!.height) / 2;
-        paintImage(
-          canvas: canvas,
-          image: warningIconImage!,
-          rect: Rect.fromLTWH(iconX, iconY, warningIconImage!.width.toDouble(), warningIconImage!.height.toDouble()),
-          fit: BoxFit.scaleDown,
-        );
-      }
-    } else {
-      canvas.drawRect(Rect.fromLTWH(startX, startY, rectWidth, rectHeight), paint);
+    final rectHeight = worldSize.y;
+    const startY = 0.0;
 
-      if (warningIconImage != null) {
+    canvas.drawRect(Rect.fromLTWH(startX, startY, rectWidth, rectHeight), paint);
+
+    if (warningIconImage != null) {
         final iconX = startX + (rectWidth - warningIconImage!.width) / 2;
         final iconY = startY + (rectHeight - warningIconImage!.height) / 2;
         paintImage(
@@ -98,7 +90,6 @@ class Pattern1 extends PositionComponent {
           rect: Rect.fromLTWH(iconX, iconY, warningIconImage!.width.toDouble(), warningIconImage!.height.toDouble()),
           fit: BoxFit.scaleDown,
         );
-      }
     }
   }
 }

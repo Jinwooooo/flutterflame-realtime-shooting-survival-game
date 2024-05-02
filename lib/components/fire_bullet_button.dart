@@ -25,11 +25,11 @@ class _FireButtonState extends State<FireBulletButton> {
         child: Container(
           width: 100,
           height: 100,
-          decoration: BoxDecoration(
-            color: Colors.red,
+          decoration: const BoxDecoration(
+            color: Colors.orange,
             shape: BoxShape.circle,
           ),
-          child: Center(
+          child: const Center(
             child: Icon(Icons.fireplace, size: 50, color: Colors.white),
           ),
         ),
@@ -48,7 +48,7 @@ class _FireButtonState extends State<FireBulletButton> {
     setState(() {
       _isButtonEnabled = false;
     });
-    Timer(Duration(seconds: 5), () {
+    Timer(const Duration(seconds: 5), () {
       if (mounted) {
         setState(() {
           _isButtonEnabled = true;

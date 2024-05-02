@@ -51,21 +51,6 @@ class JoypadState extends State<Joypad> {
               ),
             ),
           ),
-          Positioned(
-            top: 80,
-            right: 60,
-            child: ElevatedButton(
-              onPressed: () {
-                if (isJoypadEnabled) {
-                  toggleJoypadEnabled();
-                  Timer(const Duration(seconds: 2), () {
-                    toggleJoypadEnabled();
-                  });
-                }
-              },
-              child: const Text(''),
-            ),
-          ),
         ],
       ),
     );
@@ -103,6 +88,18 @@ class JoypadState extends State<Joypad> {
     );
   }
 
+  void _startMovementTimer() {
+    movementTimer = Timer.periodic(const Duration(milliseconds: 10), (_) {
+      if (isPressed && widget.onDirectionChanged != null) {
+        widget.onDirectionChanged!(direction);
+      }
+    });
+  }
+
+  void _stopMovementTimer() {
+    movementTimer?.cancel();
+  }
+
   void updateDelta(Offset newDelta) {
     setState(() {
       delta = newDelta;
@@ -134,21 +131,16 @@ class JoypadState extends State<Joypad> {
     return Direction.none;
   }
 
-  void _startMovementTimer() {
-    movementTimer = Timer.periodic(const Duration(milliseconds: 10), (_) {
-      if (isPressed && widget.onDirectionChanged != null) {
-        widget.onDirectionChanged!(direction);
-      }
-    });
-  }
-
-  void _stopMovementTimer() {
-    movementTimer?.cancel();
-  }
-
-  void toggleJoypadEnabled() {
+  void enableJoypad(bool enable) {
     setState(() {
-      isJoypadEnabled = !isJoypadEnabled;
+      isJoypadEnabled = enable;
+      if (!enable) {
+        direction = Direction.none;
+        delta = Offset.zero;
+        if (widget.onDirectionChanged != null) {
+          widget.onDirectionChanged!(Direction.none);
+        }
+      }
     });
   }
 }

@@ -7,26 +7,26 @@ import 'package:flutter/material.dart';
 // flame imports
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:flame/sprite.dart';
 
 // self imports
+import 'package:flame_realtime_shooting/game/game.dart';
 import 'package:flame_realtime_shooting/game/bullet.dart';
+import 'package:flame_realtime_shooting/game/cannon.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
-// import 'package:flame_realtime_shooting/components/raid_1.dart';
+import 'package:flame_realtime_shooting/components/raid_1.dart';
 
 
-class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
+class Player extends PositionComponent with HasGameRef<MyGame>, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
   late final Vector2 initialPosition;
   Timer? moveTimer;
   Player({required bool isMe}) : _isMyPlayer = isMe;
   final bool _isMyPlayer;
   static const radius = 40.0;
-  bool hasBeenHit = false;
-
-  Map<Direction, Sprite> directionSprites = {};
   Direction currentDirection = Direction.up;
+  Map<Direction, Sprite> directionSprites = {};
   late SpriteComponent tankSprite;
+  double hitCooldown = 0;
 
   @override
   Future<void>? onLoad() async {
@@ -83,12 +83,48 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     }
   }
 
+  void disableMovement() {
+    currentDirection = Direction.none;
+    tankSprite.sprite = directionSprites[currentDirection];
+    gameRef.disableJoypadTemporarily();
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (hitCooldown > 0) {
+      hitCooldown -= dt;
+    }
+  }
+
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
+
+    // bullet
     if (other is Bullet && _isMyPlayer != other.isMine) {
       other.hasBeenHit = true;
       other.removeFromParent();
+    }
+
+    // cannon
+    if (other is Cannon && _isMyPlayer != other.isMine) {
+      other.hasBeenHit = true;
+      other.removeFromParent();
+    }
+
+    // raid
+    if (other is RaidRectangle && hitCooldown <= 0) {
+      hitCooldown = 2.0;
+      gameRef.updatePlayerHealth(this, 25);
+
+      if (_isMyPlayer) {
+        gameRef.enableJoypad(false);
+
+        Future.delayed(const Duration(seconds: 10), () {
+          gameRef.enableJoypad(true);
+        });
+      }
     }
   }
 }
