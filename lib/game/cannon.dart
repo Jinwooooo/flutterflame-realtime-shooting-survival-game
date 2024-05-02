@@ -6,7 +6,7 @@ import 'package:flame/image_composition.dart' as flame_image;
 class Cannon extends PositionComponent with CollisionCallbacks, HasGameRef {
   final Vector2 velocity;
   final flame_image.Image image;
-  static const radius = 5.0;
+  static const radius = 10.0;
   bool hasBeenHit = false;
   final bool isMine;
   int damage = 20;

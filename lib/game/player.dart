@@ -121,7 +121,7 @@ class Player extends PositionComponent with HasGameRef<MyGame>, CollisionCallbac
       if (_isMyPlayer) {
         gameRef.enableJoypad(false);
 
-        Future.delayed(const Duration(seconds: 10), () {
+        Future.delayed(const Duration(seconds: 2), () {
           gameRef.enableJoypad(true);
         });
       }

@@ -83,7 +83,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
   void handleTimeTick(int elapsedSeconds) {
     _timerText.text = _gameTimer.formattedTime;
 
-    if (elapsedSeconds == 2) {
+    if (elapsedSeconds == 10) {
       _pattern1 = Pattern1(patternsData: [
         PatternData1(0, 500, 1),
         PatternData1(500, 1000, 2),
@@ -95,11 +95,11 @@ class MyGame extends FlameGame with HasCollisionDetection {
       _pattern1.priority = 2;
       add(_pattern1);
     }
-    if (elapsedSeconds == 5) {
+    if (elapsedSeconds == 13) {
       remove(_pattern1);
     }
 
-    if (elapsedSeconds == 5) {
+    if (elapsedSeconds == 13) {
       _raid1 = Raid1(raidsData: [
         RaidData1(0, 700, 1),
         RaidData1(700, 1400, 2),
@@ -110,7 +110,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
       _raid1.priority = 2;
       add(_raid1);
     }
-    if (elapsedSeconds == 10) {
+    if (elapsedSeconds == 18) {
       remove(_raid1);
     }
   }
