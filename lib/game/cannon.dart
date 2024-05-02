@@ -10,12 +10,12 @@ class Cannon extends PositionComponent with CollisionCallbacks, HasGameRef {
   final Vector2 velocity;
   final flame_image.Image image;
   static const radius = 5.0;
-  bool hasBeenCannon = false;
-  final bool isCannon;
-  int damage = 2;
+  bool hasBeenHit = false;
+  final bool isMine;
+  int damage = 20;
 
   Cannon({
-    required this.isCannon,
+    required this.isMine,
     required this.velocity,
     required this.image,
     required Vector2 initialPosition,

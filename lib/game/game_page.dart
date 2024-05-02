@@ -185,17 +185,8 @@ class _GamePageState extends State<GamePage> {
                     payload['y'] * worldSize.y
                 );
                 Direction direction = Direction.values[payload['direction']];
-                int interval = 100;  // Interval between shots in milliseconds
-                int cannonCount = 4;  // Number of bullets to cannon
+                _game.createCannonForOpponent(start, direction);
 
-                async.Timer.periodic(Duration(milliseconds: interval), (timer) {
-                  if (cannonCount> 0) {
-                    _game.createBulletForOpponent(start, direction);
-                    cannonCount--;
-                  } else {
-                    timer.cancel();
-                  }
-                });
               },
             );
           },

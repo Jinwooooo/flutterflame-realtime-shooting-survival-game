@@ -154,13 +154,15 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
     for (final child in children) {
       // Check if the component is a Bullet and has been hit, and it is not mine
+
       if (child is Bullet && child.hasBeenHit && !child.isMine) {
         _playerHealthPoint -= child.damage;
         onGameStateUpdate(_player.position, _playerHealthPoint, _player.currentDirection);
         _player.updateHealth(_playerHealthPoint / _initialHealthPoints);
       }
+
       // Check if the component is a Cannon and has been hit, and it is not mine
-      if (child is Cannon && child.hasBeenCannon && !child.isCannon) {
+      if (child is Cannon && child.hasBeenHit && !child.isMine) {
         _playerHealthPoint -= child.damage;
         print('hit by cannon');
         onGameStateUpdate(_player.position, _playerHealthPoint, _player.currentDirection);
@@ -189,6 +191,31 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
   Vector2 getBulletVelocity(Direction direction) {
     const double bulletSpeed = 200;
+    switch (direction) {
+      case Direction.up:
+        return Vector2(0, -bulletSpeed);
+      case Direction.down:
+        return Vector2(0, bulletSpeed);
+      case Direction.left:
+        return Vector2(-bulletSpeed, 0);
+      case Direction.right:
+        return Vector2(bulletSpeed, 0);
+      case Direction.upLeft:
+        return Vector2(-bulletSpeed / sqrt(2), -bulletSpeed / sqrt(2));
+      case Direction.upRight:
+        return Vector2(bulletSpeed / sqrt(2), -bulletSpeed / sqrt(2));
+      case Direction.downLeft:
+        return Vector2(-bulletSpeed / sqrt(2), bulletSpeed / sqrt(2));
+      case Direction.downRight:
+        return Vector2(bulletSpeed / sqrt(2), bulletSpeed / sqrt(2));
+      default:
+        return Vector2(0, -bulletSpeed);
+    }
+  }
+
+
+  Vector2 getCanonVelocity(Direction direction) {
+    const double bulletSpeed = 400;
     switch (direction) {
       case Direction.up:
         return Vector2(0, -bulletSpeed);
@@ -267,25 +294,18 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
   // new //
   void triggerCannonShooting() {
-    int count = 0;
+
     shootCannons(true);  // First shot, notify the opponent
-    async.Timer.periodic(Duration(milliseconds: 100), (timer) {
-      if (count < 3) {  // Shoot 4 more times
-        shootCannons(false);  // Subsequent shots do not need to notify the opponent
-        count++;
-      } else {
-        timer.cancel();
-      }
-    });
+
   }
 
   Future<void> shootCannons(bool notifyOpponent) async {
-    Vector2 cannonVelocity = getBulletVelocity(_player.currentDirection);
+    Vector2 cannonVelocity = getCanonVelocity(_player.currentDirection);
     Vector2 cannonInitialPosition = Vector2.copy(_player.position)
       ..add(cannonVelocity.normalized() * Player.radius * 1.5);
 
     Cannon newCannon = Cannon(
-      isCannon: true,
+      isMine: true,
       velocity: cannonVelocity,
       image: await images.load('cannon-1.png'),  // 캐논에 맞는 이미지 사용
       initialPosition: cannonInitialPosition,
@@ -304,10 +324,10 @@ class MyGame extends FlameGame with HasCollisionDetection {
 
 
   void createCannonForOpponent(Vector2 startPosition, Direction direction) {
-    Vector2 bulletVelocity = getBulletVelocity(direction);
+    Vector2 cannonVelocity = getCanonVelocity(direction);
     Cannon newCannon = Cannon(
-      isCannon: false,
-      velocity: bulletVelocity,
+      isMine: false,
+      velocity: cannonVelocity,
       image: _opponentBulletImage,
       initialPosition: startPosition,
     );

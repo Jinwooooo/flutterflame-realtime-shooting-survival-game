@@ -91,8 +91,8 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
       other.removeFromParent();
     }
     // new
-    if (other is Cannon && _isMyPlayer != other.isCannon) {
-      other.hasBeenCannon = true;
+    if (other is Cannon && _isMyPlayer != other.isMine) {
+      other.hasBeenHit = true;
       other.removeFromParent();
     }
   }
