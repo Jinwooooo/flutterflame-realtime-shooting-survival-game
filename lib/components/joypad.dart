@@ -19,52 +19,60 @@ class JoypadState extends State<Joypad> {
   Direction direction = Direction.none;
   Offset delta = Offset.zero;
   bool isPressed = false;
+  bool isJoypadEnabled = true;
   Timer? movementTimer;
 
   @override
   Widget build(BuildContext context) {
     return Opacity(
       opacity: 0.6,
-      child: Container(
-        height: 120,
-        width: 120,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,  // This enforces a circular shape for the outer circle
-          color: Colors.grey[800],
-          border: Border.all(color: Colors.white, width: 2),
-        ),
-        child: GestureDetector(
-          onPanStart: _handlePanStart,
-          onPanUpdate: _handlePanUpdate,
-          onPanEnd: _handlePanEnd,
-          child: Center(  // Ensure the controlling stick is centered
-            child: Transform.translate(
-              offset: delta,
-              child: CircleAvatar(
-                backgroundColor: Colors.grey[300],
-                // The radius is set to half the size of the outer circle
-                radius: 30,
+      child: Stack(
+        children: [
+          Container(
+            height: 120,
+            width: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.grey[800],
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: GestureDetector(
+              onPanStart: _handlePanStart,
+              onPanUpdate: _handlePanUpdate,
+              onPanEnd: _handlePanEnd,
+              child: Center(
+                child: Transform.translate(
+                  offset: delta,
+                  child: CircleAvatar(
+                    backgroundColor: Colors.grey[300],
+                    radius: 30,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
+
   void _handlePanStart(DragStartDetails details) {
+    if (!isJoypadEnabled) return;
     isPressed = true;
     _updateMovement(details.localPosition);
     _startMovementTimer();
   }
 
   void _handlePanUpdate(DragUpdateDetails details) {
+    if (!isJoypadEnabled) return;
     if (isPressed) {
       _updateMovement(details.localPosition);
     }
   }
 
   void _handlePanEnd(DragEndDetails details) {
+    if (!isJoypadEnabled) return;
     isPressed = false;
     updateDelta(Offset.zero);
     _stopMovementTimer();
@@ -80,11 +88,23 @@ class JoypadState extends State<Joypad> {
     );
   }
 
+  void _startMovementTimer() {
+    movementTimer = Timer.periodic(const Duration(milliseconds: 10), (_) {
+      if (isPressed && widget.onDirectionChanged != null) {
+        widget.onDirectionChanged!(direction);
+      }
+    });
+  }
+
+  void _stopMovementTimer() {
+    movementTimer?.cancel();
+  }
+
   void updateDelta(Offset newDelta) {
     setState(() {
       delta = newDelta;
     });
-    direction = getDirectionFromOffset(newDelta); // Update the direction here
+    direction = getDirectionFromOffset(newDelta);
     if (widget.onDirectionChanged != null) {
       widget.onDirectionChanged!(direction);
     }
@@ -93,7 +113,7 @@ class JoypadState extends State<Joypad> {
   Direction getDirectionFromOffset(Offset offset) {
     final double dx = offset.dx;
     final double dy = offset.dy;
-    if (dx.abs() > 20 && dy.abs() > 20) { // Adjust the threshold as needed
+    if (dx.abs() > 10 && dy.abs() > 10) {
       if (dx > 0 && dy < 0) {
         return Direction.upRight;
       } else if (dx < 0 && dy < 0) {
@@ -111,15 +131,16 @@ class JoypadState extends State<Joypad> {
     return Direction.none;
   }
 
-  void _startMovementTimer() {
-    movementTimer = Timer.periodic(const Duration(milliseconds: 10), (_) {
-      if (isPressed && widget.onDirectionChanged != null) {
-        widget.onDirectionChanged!(direction);
+  void enableJoypad(bool enable) {
+    setState(() {
+      isJoypadEnabled = enable;
+      if (!enable) {
+        direction = Direction.none;
+        delta = Offset.zero;
+        if (widget.onDirectionChanged != null) {
+          widget.onDirectionChanged!(Direction.none);
+        }
       }
     });
-  }
-
-  void _stopMovementTimer() {
-    movementTimer?.cancel();
   }
 }

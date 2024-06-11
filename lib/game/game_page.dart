@@ -1,9 +1,11 @@
-// flutter imports
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+// dart imports
+import 'dart:async' as async;
 
 // flame imports
 import 'package:flame/game.dart';
+
+// flutter imports
+import 'package:flutter/material.dart';
 
 // realtime sync imports
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -13,8 +15,8 @@ import 'package:uuid/uuid.dart';
 import 'package:flame_realtime_shooting/main.dart';
 import 'package:flame_realtime_shooting/game/game.dart';
 import 'package:flame_realtime_shooting/components/joypad.dart';
-import 'package:flame_realtime_shooting/components/fire_button.dart';
-
+import 'package:flame_realtime_shooting/components/fire_bullet_button.dart';
+import 'package:flame_realtime_shooting/components/fire_cannon_button.dart';
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key});
@@ -22,6 +24,8 @@ class GamePage extends StatefulWidget {
   @override
   _GamePageState createState() => _GamePageState();
 }
+
+GlobalKey<JoypadState> _joypadKey = GlobalKey();
 
 class _GamePageState extends State<GamePage> {
   late final MyGame _game;
@@ -33,30 +37,34 @@ class _GamePageState extends State<GamePage> {
       body: Stack(
         fit: StackFit.expand,
         children: [
+          Image.asset('assets/images/brown-background.png', fit: BoxFit.cover),
           GameWidget(game: _game),
           Positioned(
             left: 20,
             bottom: 20,
-            child: Joypad(onDirectionChanged: (direction) {
+            child: Joypad(
+              key: _joypadKey,
+              onDirectionChanged: (direction) {
               _game.handleJoypadDirection(direction);
             }),
           ),
           Positioned(
             right: 20,
-            bottom: 20,
-            child: FireButton(
-              onFirePressed: _fire,
+            bottom: 10,
+            child: CannonButton(
+              onItemPressed: _game.triggerCannonShooting,
+            ),
+          ),
+          Positioned(
+            right: 20,
+            bottom: 120,
+            child: FireBulletButton(
+              onFirePressed: _game.triggerShooting,
             ),
           ),
         ],
       ),
     );
-  }
-
-  void _fire() {
-  if (_game != null) {
-    _game.fireBullets(5);
-    }
   }
 
   @override
@@ -66,16 +74,33 @@ class _GamePageState extends State<GamePage> {
   }
 
   Future<void> _initialize() async {
+    void enableJoypadInWidget(bool enable) {
+      if (_joypadKey.currentState != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _joypadKey.currentState!.enableJoypad(enable);
+            });
+          }
+        });
+      }
+    }
+
     _game = MyGame(
-      onGameStateUpdate: (position, health) async {
+      onGameStateUpdate: (Vector2 position, int health, Direction direction) async {
         ChannelResponse response;
         do {
-          response = await _gameChannel!.sendBroadcastMessage(
-            event: 'game_state',
-            payload: {'x': position.x, 'y': position.y, 'health': health},
-          );
-          await Future.delayed(Duration.zero);
-          setState(() {});
+            response = await _gameChannel!.sendBroadcastMessage(
+                event: 'game_state',
+                payload: {
+                  'x': position.x / worldSize.x, 
+                  'y': position.y / worldSize.y, 
+                  'health': health, 
+                  'direction': direction.index,
+                  },
+            );
+            await Future.delayed(Duration.zero);
+            setState(() {});
         } while (response == ChannelResponse.rateLimited && health <= 0);
       },
       onGameOver: (playerWon) async {
@@ -96,7 +121,21 @@ class _GamePageState extends State<GamePage> {
           ),
         );
       },
+      onFireEvent: (Map<String, dynamic> eventData) {
+        _gameChannel!.sendBroadcastMessage(
+          event: 'bullet_fire',
+          payload: eventData,
+        );
+      },
+      onCannonEvent: (Map<String, dynamic> cannonData) {
+        _gameChannel!.sendBroadcastMessage(
+          event: 'cannon_fire',
+          payload: cannonData,
+        );
+      },
     );
+
+    _game.onJoypadEnabledChanged = enableJoypadInWidget;
 
     await Future.delayed(Duration.zero);
     if (mounted) {
@@ -106,33 +145,68 @@ class _GamePageState extends State<GamePage> {
 
   void _openLobbyDialog() {
     showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => _LobbyDialog(
-              onGameStarted: (gameId) async {
-                await Future.delayed(Duration.zero);
-                setState(() {});
-                _game.startNewGame();
-                _gameChannel = supabase.channel(gameId,
-                    opts: const RealtimeChannelConfig(ack: true));
-                _gameChannel!
-                    .onBroadcast(
-                      event: 'game_state',
-                      callback: (payload, [_]) {
-                        final position = Vector2(
-                            payload['x'] as double, payload['y'] as double);
-                        final opponentHealth = payload['health'] as int;
-                        _game.updateOpponent(
-                            position: position, health: opponentHealth);
-                        if (opponentHealth <= 0 && !_game.isGameOver) {
-                          _game.isGameOver = true;
-                          _game.onGameOver(true);
-                        }
-                      },
-                    )
-                    .subscribe();
-              },
-            ));
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _LobbyDialog(
+        onGameStarted: (gameId) async {
+          await Future.delayed(Duration.zero);
+          setState(() {});
+          _game.startNewGame();
+          _gameChannel = supabase.channel(gameId,
+              opts: const RealtimeChannelConfig(ack: true));
+              _gameChannel!.onBroadcast(
+                event: 'game_state',
+                callback: (payload, [_]) {
+                  final position = Vector2((payload['x'] as double), (payload['y'] as double));
+                  final opponentHealth = payload['health'] as int;
+                  final directionIndex = payload['direction'] as int;
+                  final direction = Direction.values[directionIndex];
+                  _game.updateOpponent(
+                    position: position, 
+                    health: opponentHealth,
+                    direction: direction,
+                  );
+                  if (opponentHealth <= 0 && !_game.isGameOver) {
+                    _game.isGameOver = true;
+                    _game.onGameOver(true);
+                  }
+                },
+          ).subscribe();
+          _gameChannel!.onBroadcast(
+            event: 'bullet_fire',
+            callback: (payload, [_]) {
+              Vector2 start = Vector2(
+                payload['x'] * worldSize.x,
+                payload['y'] * worldSize.y
+              );
+              Direction direction = Direction.values[payload['direction']];
+              int shotsCount = 5;  // Number of bullets to fire
+              int interval = 100;  // Interval between shots in milliseconds
+
+              async.Timer.periodic(Duration(milliseconds: interval), (timer) {
+                if (shotsCount > 0) {
+                  _game.createBulletForOpponent(start, direction);
+                  shotsCount--;
+                } else {
+                  timer.cancel();
+                }
+              });
+            },
+          );
+          _gameChannel!.onBroadcast(
+            event: 'cannon_fire',
+            callback: (payload, [_]) {
+              Vector2 start = Vector2(
+                  payload['x'] * worldSize.x,
+                  payload['y'] * worldSize.y
+              );
+              Direction direction = Direction.values[payload['direction']];
+              _game.createCannonForOpponent(start, direction);
+            },
+          );
+        },
+      )
+    );
   }
 }
 
@@ -162,13 +236,10 @@ class _LobbyDialogState extends State<_LobbyDialog> {
     );
 
     _lobbyChannel
-        .onPresenceSync((payload, [ref]) {
-          final presenceStates = _lobbyChannel.presenceState();
-          setState(() {
-            _userids = presenceStates
-                .map((presenceState) =>
-                    presenceState.presences.first.payload['user_id'] as String)
-                .toList();
+      .onPresenceSync((payload, [ref]) {
+        final presenceStates = _lobbyChannel.presenceState();
+        setState(() {
+          _userids = presenceStates.map((presenceState) => presenceState.presences.first.payload['user_id'] as String).toList();
           });
         })
         .onBroadcast(

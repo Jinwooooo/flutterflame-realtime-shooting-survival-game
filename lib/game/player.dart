@@ -1,6 +1,5 @@
 // dart imports
 import 'dart:async';
-import 'dart:math';
 
 // flutter imports
 import 'package:flutter/material.dart';
@@ -10,16 +9,24 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 
 // self imports
+import 'package:flame_realtime_shooting/game/game.dart';
 import 'package:flame_realtime_shooting/game/bullet.dart';
+import 'package:flame_realtime_shooting/game/cannon.dart';
+import 'package:flame_realtime_shooting/components/joypad.dart';
+import 'package:flame_realtime_shooting/components/raid_1.dart';
 
 
-class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
+class Player extends PositionComponent with HasGameRef<MyGame>, CollisionCallbacks {
   Vector2 velocity = Vector2.zero();
   late final Vector2 initialPosition;
   Timer? moveTimer;
   Player({required bool isMe}) : _isMyPlayer = isMe;
   final bool _isMyPlayer;
-  static const radius = 20.0;
+  static const radius = 40.0;
+  Direction currentDirection = Direction.up;
+  Map<Direction, Sprite> directionSprites = {};
+  late SpriteComponent tankSprite;
+  double hitCooldown = 0;
 
   @override
   Future<void>? onLoad() async {
@@ -28,19 +35,44 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     height = radius * 2;
 
     final initialX = gameRef.size.x / 2;
+    final initialY = gameRef.size.y / 2;
+
     initialPosition = _isMyPlayer
-        ? Vector2(initialX, gameRef.size.y * 0.8)
-        : Vector2(initialX, gameRef.size.y * 0.2);
+        ? Vector2(initialX, initialY + radius)
+        : Vector2(initialX, initialY - radius);
     position = initialPosition;
 
+    directionSprites = {
+      Direction.up: Sprite(await gameRef.images.load('tank-1-0.png')),
+      Direction.upRight: Sprite(await gameRef.images.load('tank-1-1.png')),
+      Direction.right: Sprite(await gameRef.images.load('tank-1-2.png')),
+      Direction.downRight: Sprite(await gameRef.images.load('tank-1-3.png')),
+      Direction.down: Sprite(await gameRef.images.load('tank-1-4.png')),
+      Direction.downLeft: Sprite(await gameRef.images.load('tank-1-5.png')),
+      Direction.left: Sprite(await gameRef.images.load('tank-1-6.png')),
+      Direction.upLeft: Sprite(await gameRef.images.load('tank-1-7.png')),
+    };
+    currentDirection = Direction.up;
+    tankSprite = SpriteComponent(
+      sprite: directionSprites[currentDirection],
+      size: Vector2.all(radius * 2),
+    );
+
+    add(tankSprite);
     add(CircleHitbox());
     add(_Gauge());
     await super.onLoad();
   }
 
   void move(Vector2 delta) {
-    final newPosition = position + delta;
+    Vector2 newPosition = position + delta;
+    newPosition.clamp(Vector2(radius, radius), gameRef.size - Vector2(radius, radius));
     position = newPosition;
+  }
+
+  void updateDirection(Direction newDirection) {
+    currentDirection = newDirection;
+    tankSprite.sprite = directionSprites[currentDirection];
   }
 
   void updateHealth(double healthLeft) {
@@ -51,35 +83,49 @@ class Player extends PositionComponent with HasGameRef, CollisionCallbacks {
     }
   }
 
-  @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-      super.onCollision(intersectionPoints, other);
-      if (other is Player && _isMyPlayer) {
-          // Determine the direction of the push based on the position of the colliders
-          Vector2 pushDirection = other.position - position;
-          pushDirection.normalize(); // Normalize to get the direction vector
-          other.position += pushDirection * 5; // Move the opponent
-      }
-
-      if (other is Bullet && _isMyPlayer != other.isMine) {
-        other.hasBeenHit = true;
-        other.removeFromParent();
-      }
+  void disableMovement() {
+    currentDirection = Direction.none;
+    tankSprite.sprite = directionSprites[currentDirection];
+    gameRef.disableJoypadTemporarily();
   }
 
-  // @override
-  // void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-  //   super.onCollision(intersectionPoints, other);
-  //   if (other is Bullet && _isMyPlayer != other.isMine) {
-  //     other.hasBeenHit = true;
-  //     other.removeFromParent();
-  //   }
-  // }
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (hitCooldown > 0) {
+      hitCooldown -= dt;
+    }
+  }
 
-  Vector2 getMirroredPercentPosition() {
-    final mirroredPosition = gameRef.size - position;
-    return Vector2(mirroredPosition.x / gameRef.size.x,
-        mirroredPosition.y / gameRef.size.y);
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
+
+    // bullet
+    if (other is Bullet && _isMyPlayer != other.isMine) {
+      other.hasBeenHit = true;
+      other.removeFromParent();
+    }
+
+    // cannon
+    if (other is Cannon && _isMyPlayer != other.isMine) {
+      other.hasBeenHit = true;
+      other.removeFromParent();
+    }
+
+    // raid
+    if (other is RaidRectangle && hitCooldown <= 0) {
+      hitCooldown = 2.0;
+      gameRef.updatePlayerHealth(this, 25);
+
+      if (_isMyPlayer) {
+        gameRef.enableJoypad(false);
+
+        Future.delayed(const Duration(seconds: 2), () {
+          gameRef.enableJoypad(true);
+        });
+      }
+    }
   }
 }
 
