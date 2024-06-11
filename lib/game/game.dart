@@ -89,7 +89,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
         PatternData1(500, 1000, 2),
         PatternData1(1000, 1500, 3),
         PatternData1(1500, 2000, 4),
-        PatternData1(2000, 2500, 5),
+        // PatternData1(2000, 2500, 5),
       ]);
       _pattern1.elapsedMilliseconds = 0;
       _pattern1.priority = 2;
@@ -105,7 +105,7 @@ class MyGame extends FlameGame with HasCollisionDetection {
         RaidData1(700, 1400, 2),
         RaidData1(1400, 2100, 3),
         RaidData1(2100, 2800, 4),
-        RaidData1(2800, 3500, 5),
+        // RaidData1(2800, 3500, 5),
       ]);
       _raid1.priority = 2;
       add(_raid1);
@@ -120,8 +120,8 @@ class MyGame extends FlameGame with HasCollisionDetection {
     _opponent = await createPlayer('opponent-bg.png', false);
     _player.priority = 5;
     _opponent.priority = 5;
-    _player.debugMode = true;
-    _opponent.debugMode = true;
+    // _player.debugMode = true;
+    // _opponent.debugMode = true;
     add(_player);
     add(_opponent);
   }
