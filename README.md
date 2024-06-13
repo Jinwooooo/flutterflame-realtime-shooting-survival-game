@@ -6,7 +6,7 @@
     <img src="https://img.shields.io/badge/Supabase-lightgreen?logo=supabase&style=flat-square"/>
   </div>
   <br>
-  <a href="https://youtu.be/vHHZA0hJiAY"> 데모영상 보기 </a>
+  <a href="https://youtu.be/QxDfCKLf2G8"> 데모영상 보기 </a>
 </div>
 
 ---
